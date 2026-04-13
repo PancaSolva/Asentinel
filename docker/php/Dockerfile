@@ -1,16 +1,41 @@
-FROM php:8.3-fpm-alpine
-
-# Minimal system packages placeholder for future production hardening.
-RUN apk add --no-cache bash git unzip sqlite
-
-# Minimal PHP extensions for Laravel with SQLite support.
-RUN docker-php-ext-install pdo pdo_sqlite
+FROM composer:2 AS vendor
 
 WORKDIR /var/www
 
-# Composer is copied from the official image to keep this template clean.
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY composer.json composer.lock ./
 
-# Source code is mounted via volume in docker-compose for local development.
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+FROM php:8.5-fpm-alpine
+
+WORKDIR /var/www
+
+RUN apk add --no-cache \
+        libzip-dev \
+        sqlite \
+        unzip \
+    && docker-php-ext-install -j"$(nproc)" \
+        mbstring \
+        pdo_sqlite \
+        sqlite3 \
+        zip \
+    && rm -rf /tmp/* /var/cache/apk/*
+
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
+COPY --from=vendor /var/www/vendor /var/www/vendor
+COPY --chown=www-data:www-data . .
+
+RUN mkdir -p storage bootstrap/cache database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data storage bootstrap/cache database \
+    && chmod -R ug+rwx storage bootstrap/cache
+
+EXPOSE 9000
+
 CMD ["php-fpm"]
-
