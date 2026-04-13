@@ -44,18 +44,19 @@ class AdminApiUserTest extends TestCase
             'name' => 'New User',
             'email' => 'newuser@example.com',
             'password' => 'password123',
-            'has_sandwich_bar' => true,
+            'role' => 'user',
         ];
 
         $response = $this->postJson('/admin/api/users', $userData);
 
         $response->assertStatus(201)
                  ->assertJsonPath('data.name', 'New User')
-                 ->assertJsonPath('data.email', 'newuser@example.com');
+                 ->assertJsonPath('data.email', 'newuser@example.com')
+                 ->assertJsonPath('data.role', 'user');
 
         $this->assertDatabaseHas('users', [
             'email' => 'newuser@example.com',
-            'has_sandwich_bar' => true,
+            'role' => 'user',
         ]);
     }
 
@@ -63,20 +64,24 @@ class AdminApiUserTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'Old Name',
+            'role' => 'user',
         ]);
 
         $updateData = [
             'name' => 'Updated Name',
+            'role' => 'admin',
         ];
 
         $response = $this->putJson("/admin/api/users/{$user->id}", $updateData);
 
         $response->assertStatus(200)
-                 ->assertJsonPath('data.name', 'Updated Name');
+                 ->assertJsonPath('data.name', 'Updated Name')
+                 ->assertJsonPath('data.role', 'admin');
 
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Updated Name',
+            'role' => 'admin',
         ]);
     }
 
