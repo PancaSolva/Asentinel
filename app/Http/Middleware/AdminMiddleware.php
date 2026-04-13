@@ -16,6 +16,9 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!session('admin_logged_in')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
             return redirect('/login');
         }
         return $next($request);
