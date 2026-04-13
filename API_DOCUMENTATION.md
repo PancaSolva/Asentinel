@@ -16,96 +16,58 @@ To access these endpoints, the user must be logged in as an admin. The API uses 
 
 ---
 
-## User Management Endpoints
-
-### 1. List All Users
-Retrieves a list of all registered users.
-
+## 1. User Management
 - **URL**: `/admin/api/users`
-- **Method**: `GET`
-- **Success Response**:
-  - **Code**: `200 OK`
-  - **Content**:
-    ```json
-    {
-      "success": true,
-      "data": [
-        {
-          "id": 1,
-          "name": "John Doe",
-          "email": "john@example.com",
-          "role": "admin",
-          "created_at": "2026-04-13T03:56:53.000000Z",
-          "updated_at": "2026-04-13T03:56:53.000000Z"
-        }
-      ]
-    }
-    ```
+- **Endpoints**:
+  - `GET /` : List all users
+  - `POST /` : Create user (`name`, `email`, `password`, `role`)
+  - `PUT /{id}` : Update user
+  - `DELETE /{id}` : Delete user
 
-### 2. Create User
-Adds a new user to the system.
+---
 
-- **URL**: `/admin/api/users`
-- **Method**: `POST`
-- **Body Parameters**:
-  | Parameter | Type | Required | Description |
-  |-----------|------|----------|-------------|
-  | `name` | `string` | Yes | The user's full name. |
-  | `email` | `string` | Yes | A unique email address. |
-  | `password` | `string` | Yes | Minimum 8 characters. |
-  | `role` | `string` | Yes | Must be either `admin` or `user`. |
-- **Success Response**:
-  - **Code**: `201 Created`
-  - **Content**:
-    ```json
-    {
-      "success": true,
-      "message": "User created successfully",
-      "data": { "id": 2, "name": "New User", "role": "user", ... }
-    }
-    ```
-- **Error Response**:
-  - **Code**: `422 Unprocessable Entity` (Validation failed)
+## 2. Aplikasi Management
+- **URL**: `/admin/api/aplikasi`
+- **Body Parameters**: `nama`, `deskripsi`, `tipe`, `ip_local`, `url_service`, `url_repository`, `url_api_docs`
+- **Endpoints**:
+  - `GET /` : List all aplikasi
+  - `POST /` : Create aplikasi
+  - `GET /{id}` : Show aplikasi detail
+  - `PUT /{id}` : Update aplikasi
+  - `DELETE /{id}` : Delete aplikasi
 
-### 3. Update User
-Edits an existing user's information.
+---
 
-- **URL**: `/admin/api/users/{id}`
-- **Method**: `PUT`
-- **Body Parameters** (All optional):
-  | Parameter | Type | Description |
-  |-----------|------|-------------|
-  | `name` | `string` | The user's updated name. |
-  | `email` | `string` | The user's updated unique email address. |
-  | `password` | `string` | The user's updated password. |
-  | `role` | `string` | Updated user role (`admin` or `user`). |
-- **Success Response**:
-  - **Code**: `200 OK`
-  - **Content**:
-    ```json
-    {
-      "success": true,
-      "message": "User updated successfully",
-      "data": { ... }
-    }
-    ```
-- **Error Response**:
-  - **Code**: `404 Not Found` (User doesn't exist)
-  - **Code**: `422 Unprocessable Entity` (Validation failed)
+## 3. Service Management
+- **URL**: `/admin/api/services`
+- **Body Parameters**: `id_aplikasi`, `nama`, `tipe_service`, `ip_local`, `url_service`, `url_repository`, `url_api_docs`
+- **Endpoints**:
+  - `GET /` : List all services
+  - `POST /` : Create service
+  - `GET /{id}` : Show service detail
+  - `PUT /{id}` : Update service
+  - `DELETE /{id}` : Delete service
 
-### 4. Delete User
-Removes a user from the system.
+---
 
-- **URL**: `/admin/api/users/{id}`
-- **Method**: `DELETE`
-- **Success Response**:
-  - **Code**: `200 OK`
-  - **Content**:
-    ```json
-    {
-      "success": true,
-      "message": "User deleted successfully"
-    }
-    ```
-- **Error Response**:
-  - **Code**: `404 Not Found` (User doesn't exist)
+## 4. Log Monitor
+- **URL**: `/admin/api/log-monitor`
+- **Body Parameters**: `id_aplikasi`, `id_service`, `url`, `status`, `http_status_code`, `response_time_ms`, `checked_at`
+- **Endpoints**:
+  - `GET /` : List all monitor logs
+  - `POST /` : Create monitor log
+  - `GET /{id}` : Show monitor log detail
+  - `PUT /{id}` : Update monitor log
+  - `DELETE /{id}` : Delete monitor log
+
+---
+
+## 5. Log Anomali
+- **URL**: `/admin/api/log-anomali`
+- **Body Parameters**: `id_aplikasi`, `id_service`, `description`, `severity`, `detected_at`
+- **Endpoints**:
+  - `GET /` : List all anomali logs
+  - `POST /` : Create anomali log
+  - `GET /{id}` : Show anomali log detail
+  - `PUT /{id}` : Update anomali log
+  - `DELETE /{id}` : Delete anomali log
