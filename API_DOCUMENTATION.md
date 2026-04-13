@@ -34,7 +34,7 @@ Retrieves a list of all registered users.
           "id": 1,
           "name": "John Doe",
           "email": "john@example.com",
-          "has_sandwich_bar": true,
+          "role": "admin",
           "created_at": "2026-04-13T03:56:53.000000Z",
           "updated_at": "2026-04-13T03:56:53.000000Z"
         }
@@ -53,7 +53,7 @@ Adds a new user to the system.
   | `name` | `string` | Yes | The user's full name. |
   | `email` | `string` | Yes | A unique email address. |
   | `password` | `string` | Yes | Minimum 8 characters. |
-  | `has_sandwich_bar` | `boolean` | No | Default is `false`. |
+  | `role` | `string` | Yes | Must be either `admin` or `user`. |
 - **Success Response**:
   - **Code**: `201 Created`
   - **Content**:
@@ -61,7 +61,7 @@ Adds a new user to the system.
     {
       "success": true,
       "message": "User created successfully",
-      "data": { "id": 2, "name": "New User", ... }
+      "data": { "id": 2, "name": "New User", "role": "user", ... }
     }
     ```
 - **Error Response**:
@@ -78,7 +78,7 @@ Edits an existing user's information.
   | `name` | `string` | The user's updated name. |
   | `email` | `string` | The user's updated unique email address. |
   | `password` | `string` | The user's updated password. |
-  | `has_sandwich_bar` | `boolean` | Updated sandwich bar access status. |
+  | `role` | `string` | Updated user role (`admin` or `user`). |
 - **Success Response**:
   - **Code**: `200 OK`
   - **Content**:

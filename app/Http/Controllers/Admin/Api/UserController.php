@@ -31,7 +31,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
-            'has_sandwich_bar' => 'boolean',
+            'role' => 'required|string|in:admin,user',
         ]);
 
         if ($validator->fails()) {
@@ -41,12 +41,10 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'has_sandwich_bar' => $request->has_sandwich_bar ?? false,
-        ]);
+        $data = $validator->validated();
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create($data);
 
         return response()->json([
             'success' => true,
@@ -73,7 +71,7 @@ class UserController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
             'password' => 'sometimes|required|min:8',
-            'has_sandwich_bar' => 'sometimes|boolean',
+            'role' => 'sometimes|required|string|in:admin,user',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +81,12 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user->update($request->all());
+        $data = $validator->validated();
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($data);
 
         return response()->json([
             'success' => true,
