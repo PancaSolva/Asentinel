@@ -26,4 +26,3 @@ Route::middleware([AdminMiddleware::class])->prefix('admin')->name('admin.')->gr
         Route::delete('/users/{id}', [ApiUserController::class, 'destroy'])->name('users.destroy'); // Delete
     });
 });
-
