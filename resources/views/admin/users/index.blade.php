@@ -1,106 +1,186 @@
 @extends('layouts.admin')
 
-@section('title', 'User Management')
+@section('title', 'Users Management')
 
 @section('content')
-<div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-            <h2 class="text-3xl font-extrabold text-white tracking-tight">User Directory</h2>
-            <p class="text-sm text-zinc-500 font-medium mt-1">Manage, monitor and audit all platform participants.</p>
-        </div>
-        <a href="{{ route('admin.users.create') }}" class="btn-primary">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            Add New User
-        </a>
+<div x-data="userManagement()" x-init="fetchUsers()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Users</h2>
+        <button @click="openCreateModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">
+            Tambah User
+        </button>
     </div>
 
-    <!-- Table Container -->
-    <div class="glass-card overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] bg-zinc-900/30 border-b border-zinc-800/50">
-                        <th class="px-8 py-5">Profile Details</th>
-                        <th class="px-8 py-5">System Role</th>
-                        <th class="px-8 py-5">Registration Date</th>
-                        <th class="px-8 py-5 text-right">Actions</th>
+    <!-- User Table -->
+    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="user in users" :key="user.id">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="user.name"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white" x-text="user.email"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                  :class="user.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'"
+                                  x-text="user.role.charAt(0).toUpperCase() + user.role.slice(1)">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button @click="openEditModal(user)" class="text-yellow-600 hover:text-yellow-900">Edit</button>
+                            <button @click="deleteUser(user.id)" class="text-red-600 hover:text-red-900">Hapus</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800/50">
-                    @forelse ($users as $user)
-                        <tr class="group hover:bg-white/[0.02] transition-all duration-200">
-                            <td class="px-8 py-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-blue-400 group-hover:border-blue-500/30 group-hover:scale-105 transition-all duration-300">
-                                        {{ substr($user->name, 0, 1) }}
-                                    </div>
-                                    <div class="space-y-0.5">
-                                        <p class="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors">{{ $user->name }}</p>
-                                        <p class="text-xs text-zinc-500 font-medium">{{ $user->email }}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-8 py-6">
-                                <span class="px-3 py-1.5 text-[10px] font-bold rounded-lg uppercase tracking-wider 
-                                    {{ ($user->role ?? 'User') === 'Admin' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-zinc-800 text-zinc-400 border border-zinc-700/50' }}">
-                                    {{ $user->role ?? 'User' }}
-                                </span>
-                            </td>
-                            <td class="px-8 py-6">
-                                <p class="text-sm text-zinc-400 font-medium">{{ $user->created_at->format('M d, Y') }}</p>
-                                <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">{{ $user->created_at->diffForHumans() }}</p>
-                            </td>
-                            <td class="px-8 py-6 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.users.show', $user) }}" 
-                                       class="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-xl transition-all duration-200" title="View Profile">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    </a>
-                                    <a href="{{ route('admin.users.edit', $user) }}" 
-                                       class="p-2 text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all duration-200" title="Edit User">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline" onsubmit="return confirm('Archive this user? This will restrict their access permanently.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all duration-200" title="Delete User">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-8 py-24 text-center">
-                                <div class="flex flex-col items-center justify-center space-y-4">
-                                    <div class="w-16 h-16 bg-zinc-900 rounded-3xl flex items-center justify-center text-zinc-700">
-                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">No users found</h3>
-                                        <p class="text-sm text-zinc-500">The directory is currently empty. Start by adding a new user.</p>
-                                    </div>
-                                    <a href="{{ route('admin.users.create') }}" class="btn-primary mt-4">
-                                        Initialize Directory
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                </template>
+                <tr x-show="users.length === 0">
+                    <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        Belum ada user. <button @click="openCreateModal()" class="font-semibold hover:text-blue-500">Tambah sekarang</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="flex justify-center mt-10">
-        <div class="glass-card px-4 py-2">
-            {{ $users->links() }}
+    <!-- Modal for Create/Edit -->
+    <div x-show="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form @submit.prevent="saveUser">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" x-text="editMode ? 'Edit User' : 'Tambah User'"></h3>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama</label>
+                                <input type="text" x-model="formData.name" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                                <input type="email" x-model="formData.email" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div x-show="!editMode">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                                <input type="password" x-model="formData.password" :required="!editMode" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                                <select x-model="formData.role" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan
+                        </button>
+                        <button @click="isModalOpen = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    function userManagement() {
+        return {
+            users: [],
+            isModalOpen: false,
+            editMode: false,
+            formData: {
+                id: null,
+                name: '',
+                email: '',
+                password: '',
+                role: 'user'
+            },
+            fetchUsers() {
+                fetch('{{ route("admin.api.users.index") }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.users = data.data;
+                    }
+                });
+            },
+            openCreateModal() {
+                this.editMode = false;
+                this.formData = { id: null, name: '', email: '', password: '', role: 'user' };
+                this.isModalOpen = true;
+            },
+            openEditModal(user) {
+                this.editMode = true;
+                this.formData = { ...user };
+                this.isModalOpen = true;
+            },
+            saveUser() {
+                const method = this.editMode ? 'PUT' : 'POST';
+                const url = this.editMode 
+                    ? `{{ url('admin/api/users') }}/${this.formData.id}`
+                    : '{{ route("admin.api.users.store") }}';
+
+                fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(this.formData)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.isModalOpen = false;
+                        this.fetchUsers();
+                        alert(data.message);
+                    } else {
+                        alert(Object.values(data.errors).flat().join('\n'));
+                    }
+                });
+            },
+            deleteUser(id) {
+                if (!confirm('Hapus user ini?')) return;
+
+                fetch(`{{ url('admin/api/users') }}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.fetchUsers();
+                        alert(data.message);
+                    }
+                });
+            }
+        }
+    }
+</script>
 @endsection
