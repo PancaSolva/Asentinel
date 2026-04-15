@@ -2,20 +2,45 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: "8.5"
+  DB_CONNECTION: sqlite
+  DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+  QUEUE_CONNECTION: sync
+
 jobs:
-  test-and-build:
+  test:
+    name: Laravel Test Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.5"
+          php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo
           coverage: none
 
@@ -23,72 +48,73 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache/files
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Prepare application environment
+      - name: Validate Composer manifest
+        run: composer validate --strict
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked
+
+      - name: Prepare SQLite environment
         run: |
           cp .env.example .env
           mkdir -p database
           touch database/database.sqlite
-          php -r "file_put_contents('.env', preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_CONNECTION=.*$/m', 'DB_CONNECTION=sqlite', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^# DB_DATABASE=.*$/m', 'DB_DATABASE=${GITHUB_WORKSPACE}/database/database.sqlite', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^SESSION_DRIVER=.*$/m', 'SESSION_DRIVER=file', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^CACHE_STORE=.*$/m', 'CACHE_STORE=file', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^QUEUE_CONNECTION=.*$/m', 'QUEUE_CONNECTION=sync', file_get_contents('.env')));"
           php artisan key:generate
 
       - name: Run database migrations
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
-          SESSION_DRIVER: file
-          CACHE_STORE: file
-          QUEUE_CONNECTION: sync
         run: php artisan migrate --force
 
-      - name: Run test suite
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
-          SESSION_DRIVER: file
-          CACHE_STORE: file
-          QUEUE_CONNECTION: sync
+      - name: Run application tests
         run: php artisan test
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  docker-compose-smoke:
+    name: Docker Compose Smoke Test
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 15
+    permissions:
+      contents: read
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
         with:
-          context: .
-          file: docker/php/Dockerfile
-          push: false
-          tags: ${{ github.repository }}:ci
+          fetch-depth: 1
+          persist-credentials: false
 
-      - name: Prepare Docker environment file
+      - name: Prepare Docker environment
         run: |
           cp .env.example .env
           mkdir -p database
           touch database/database.sqlite
-          php -r "file_put_contents('.env', preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^APP_ENV=.*$/m', 'APP_ENV=production', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^APP_DEBUG=.*$/m', 'APP_DEBUG=false', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_CONNECTION=.*$/m', 'DB_CONNECTION=sqlite', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^# DB_DATABASE=.*$/m', 'DB_DATABASE=/var/www/database/database.sqlite', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^SESSION_DRIVER=.*$/m', 'SESSION_DRIVER=file', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^CACHE_STORE=.*$/m', 'CACHE_STORE=file', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^QUEUE_CONNECTION=.*$/m', 'QUEUE_CONNECTION=sync', file_get_contents('.env')));"
-          php artisan key:generate
+          sed -i 's/^APP_ENV=.*/APP_ENV=production/' .env
+          sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
 
-      - name: Build and run Docker Compose stack
-        run: docker compose up -d --build
+      - name: Pull service images
+        run: docker compose pull
+
+      - name: Start Docker Compose stack
+        run: docker compose up -d
+
+      - name: Wait for application container health
+        run: |
+          for i in {1..20}; do
+            status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' $(docker compose ps -q app) 2>/dev/null || true)"
+            if [ "$status" = "healthy" ]; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose ps
+          docker compose logs --no-color app || true
+          exit 1
 
       - name: Wait for health endpoint
         run: |
@@ -101,24 +127,26 @@ jobs:
             sleep 3
           done
           cat /tmp/health.json || true
+          echo "Docker Compose service status:"
+          docker compose ps
+          echo "Docker Compose logs:"
+          docker compose logs --no-color || true
           exit 1
+
+      - name: Collect Docker Compose logs
+        if: failure()
+        run: docker compose logs --no-color > /tmp/docker-compose.log
+
+      - name: Upload Docker Compose logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose-logs
+          path: |
+            /tmp/health.json
+            /tmp/docker-compose.log
+          if-no-files-found: ignore
 
       - name: Shutdown Docker Compose stack
         if: always()
-        run: docker compose down --volumes --remove-orphans
-
-      - name: Log in to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push Docker image to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/php/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/asentinel:latest
+        run: docker compose down --remove-orphans
