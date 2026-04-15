@@ -2,6 +2,7 @@ services:
   db:
     image: mysql:8.4
     command: ["--default-authentication-plugin=caching_sha2_password", "--mysqlx=0", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    env_file: .env
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-asentinel}
       MYSQL_USER: ${DB_USERNAME:-asentinel}
@@ -19,9 +20,8 @@ services:
     networks:
       - asentinel
   app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
+    image: lidiman/asentinel-app:latest
+    env_file: .env
     working_dir: /var/www
     environment:
       APP_ENV: production
@@ -54,9 +54,8 @@ services:
     networks:
       - asentinel
   nginx:
-    build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
+    image: lidiman/asentinel-nginx:latest
+    env_file: .env
     ports:
       - "8000:80"
     volumes:
