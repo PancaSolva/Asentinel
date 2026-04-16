@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         $s1 = Service::create([
             'id_aplikasi' => $micro->id_aplikasi,
             'nama' => 'Auth Service',
-            'tipe_service' => 'backend',
+            'type_service' => 'backend',
             'url_service' => 'https://api.github.com',
         ]);
 
