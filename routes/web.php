@@ -11,12 +11,6 @@ use App\Http\Controllers\Api\api as PinApiController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
-// Biarkan semua rute ditangani oleh React (SPA)
-// Kecuali rute API yang sudah didefinisikan di routes/api.php
-Route::get('/{any}', function () {
-    return view('welcome');
-});
-
 // User-accessible API for Pins
 Route::prefix('api')->group(function () {
     Route::get('/pin', [PinApiController::class, 'index']);
@@ -51,3 +45,9 @@ Route::middleware([AdminMiddleware::class])->prefix('admin')->name('admin.')->gr
         Route::apiResource('log-anomali', LogAnomaliController::class);
     });
 });
+
+// Biarkan semua rute ditangani oleh React (SPA)
+// Kecuali rute API yang sudah didefinisikan di atas
+Route::get('/{any}', function () {
+    return view('welcome');
+})->where('any', '^(?!admin|api|login|logout|health|sanctum|storage).*$');

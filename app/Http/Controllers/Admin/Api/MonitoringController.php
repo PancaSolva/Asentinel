@@ -18,9 +18,8 @@ class MonitoringController extends Controller
         $totalAplikasi = Aplikasi::count();
         $totalServices = Service::count();
         
-        // Get latest status for each application and service
-        // This is a bit complex for a single query, so we'll simplify for now
-        $latestLogs = LogMonitor::latest('checked_at')->get()->unique(function($item) {
+        // Simplified latest status logic
+        $latestLogs = LogMonitor::orderBy('checked_at', 'desc')->get()->unique(function($item) {
             return ($item->id_aplikasi ?? '0') . '-' . ($item->id_service ?? '0');
         });
 
