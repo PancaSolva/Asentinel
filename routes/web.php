@@ -49,4 +49,3 @@ Route::middleware([AdminMiddleware::class])->prefix('admin')->name('admin.')->gr
         Route::apiResource('log-anomali', LogAnomaliController::class);
     });
 });
-

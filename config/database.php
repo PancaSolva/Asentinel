@@ -61,6 +61,7 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                PDO::ATTR_TIMEOUT => env('DB_CONNECT_TIMEOUT', 3),
             ]) : [],
         ],
 
@@ -97,6 +98,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'connect_timeout' => env('DB_CONNECT_TIMEOUT', 3),
         ],
 
         'sqlsrv' => [
