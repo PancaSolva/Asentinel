@@ -9,6 +9,7 @@ use App\Models\LogMonitor;
 use App\Models\LogAnomali;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Events\MonitoringUpdated;
 use Carbon\Carbon;
 
 class MonitoringController extends Controller
@@ -104,6 +105,8 @@ class MonitoringController extends Controller
             'response_time_ms' => $responseTime,
             'checked_at' => Carbon::now(),
         ]);
+
+        broadcast(new MonitoringUpdated($log));
 
         if ($status === 'DOWN') {
             LogAnomali::create([

@@ -31,6 +31,16 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
+
+        const channel = window.Echo.channel('monitoring')
+            .listen('MonitoringUpdated', (e) => {
+                console.log('Monitoring update received:', e.log);
+                fetchDashboardData();
+            });
+
+        return () => {
+            channel.stopListening('MonitoringUpdated');
+        };
     }, []);
 
     const fetchDashboardData = async () => {

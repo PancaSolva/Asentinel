@@ -11,6 +11,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 
+use App\Events\MonitoringUpdated;
+
 class CheckServiceJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -48,7 +50,7 @@ class CheckServiceJob implements ShouldQueue
             ]);
 
             // simpan log
-            LogMonitor::create([
+            $log = LogMonitor::create([
                 'id_aplikasi' => $service->id_aplikasi,
                 'id_service' => $service->id_service,
                 'url' => $service->url_service,
@@ -58,6 +60,8 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
+            broadcast(new MonitoringUpdated($log));
+
         } catch (\Exception $e) {
             $service->update([
                 'status' => 'DOWN',
@@ -65,7 +69,7 @@ class CheckServiceJob implements ShouldQueue
                 'last_status_code' => 0
             ]);
 
-            LogMonitor::create([
+            $log = LogMonitor::create([
                 'id_aplikasi' => $service->id_aplikasi,
                 'id_service' => $service->id_service,
                 'url' => $service->url_service,
@@ -73,6 +77,8 @@ class CheckServiceJob implements ShouldQueue
                 'http_status_code' => 0,
                 'checked_at' => now()
             ]);
+
+            broadcast(new MonitoringUpdated($log));
         }
     }
 }
