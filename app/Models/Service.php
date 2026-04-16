@@ -6,13 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['id_aplikasi', 'nama', 'tipe_service', 'ip_local', 'url_service', 'url_repository', 'url_api_docs'])]
 class Service extends Model
 {
     use HasFactory;
 
     protected $table = 'services';
     protected $primaryKey = 'id_service';
+
+    protected $fillable = [
+        'id_aplikasi',
+        'nama',
+        'tipe_service',
+        'ip_local',
+        'url_service',
+        'url_repository',
+        'url_api_docs',
+    ];
 
     public function aplikasi()
     {
