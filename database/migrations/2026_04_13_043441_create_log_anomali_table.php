@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('log_anomali', function (Blueprint $table) {
             $table->id('id_log_anomali'); // The ERD says id_log_monitor but it's clearly a different table
             $table->foreignId('id_aplikasi')->constrained('aplikasi', 'id_aplikasi')->onDelete('cascade');
-            $table->foreignId('id_service')->constrained('services', 'id_service')->onDelete('cascade');
+            $table->foreignId('id_service')->nullable()->constrained('services', 'id_service')->onDelete('cascade');
             $table->text('description')->nullable();
             $table->string('severity')->nullable();
             $table->timestamp('detected_at')->nullable();

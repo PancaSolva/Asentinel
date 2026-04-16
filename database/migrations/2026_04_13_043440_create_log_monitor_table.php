@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('log_monitor', function (Blueprint $table) {
             $table->id('id_log_monitor');
             $table->foreignId('id_aplikasi')->constrained('aplikasi', 'id_aplikasi')->onDelete('cascade');
-            $table->foreignId('id_service')->constrained('services', 'id_service')->onDelete('cascade');
+            $table->foreignId('id_service')->nullable()->constrained('services', 'id_service')->onDelete('cascade');
             $table->string('url')->nullable();
             $table->string('status')->nullable();
             $table->integer('http_status_code')->nullable();

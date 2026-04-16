@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\api as PinApiController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+// Biarkan semua rute ditangani oleh React (SPA)
+// Kecuali rute API yang sudah didefinisikan di routes/api.php
+Route::get('/{any}', function () {
     return view('welcome');
 });
 

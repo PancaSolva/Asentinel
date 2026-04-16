@@ -40,7 +40,10 @@ class AplikasiController extends Controller
 
     public function show($id)
     {
-        $aplikasi = Aplikasi::find($id);
+        $aplikasi = Aplikasi::with(['services', 'logMonitors' => function($query) {
+            $query->latest()->limit(10);
+        }])->find($id);
+        
         if (!$aplikasi) return response()->json(['success' => false, 'message' => 'Not found'], 404);
 
         return response()->json(['success' => true, 'data' => $aplikasi]);

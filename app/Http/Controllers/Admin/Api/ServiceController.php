@@ -13,7 +13,7 @@ class ServiceController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => Service::all()
+            'data' => Service::with('aplikasi')->get()
         ]);
     }
 
