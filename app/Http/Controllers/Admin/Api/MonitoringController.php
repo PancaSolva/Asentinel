@@ -7,6 +7,7 @@ use App\Models\Aplikasi;
 use App\Models\Service;
 use App\Models\LogMonitor;
 use App\Models\LogAnomali;
+use App\Services\AlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
@@ -113,6 +114,17 @@ class MonitoringController extends Controller
                 'severity' => 'high',
                 'detected_at' => Carbon::now(),
             ]);
+
+            // ADDED: alerting system call for manual DOWN detections.
+            app(AlertService::class)->sendAlertIfNeeded(
+                $url,
+                $url,
+                $httpCode,
+                null,
+                $id_aplikasi,
+                $id_service,
+                Carbon::now()->toIso8601String(),
+            );
         }
 
         return $log;

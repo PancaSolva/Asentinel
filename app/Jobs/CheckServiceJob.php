@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Service;
 use App\Models\LogMonitor;
+use App\Services\AlertService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -73,6 +74,17 @@ class CheckServiceJob implements ShouldQueue
                 'http_status_code' => 0,
                 'checked_at' => now()
             ]);
+
+            // ADDED: alerting system call for queued DOWN detections.
+            app(AlertService::class)->sendAlertIfNeeded(
+                $service->nama,
+                $service->url_service,
+                0,
+                $e->getMessage(),
+                $service->id_aplikasi,
+                $service->id_service,
+                now()->toIso8601String(),
+            );
         }
     }
 }
