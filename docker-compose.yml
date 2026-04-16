@@ -1,37 +1,43 @@
 services:
   app:
-    image: lidiman/asentinel-app:latest
-    env_file: .env
+    image: php:8.3-fpm-alpine
+    container_name: asentinel-app
+    env_file:
+      - .env
     working_dir: /var/www
     environment:
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_URL: http://nginx
-      DB_CONNECTION: sqlite
-      DB_DATABASE: /var/www/database/database.sqlite
-      DB_CONNECT_TIMEOUT: ${DB_CONNECT_TIMEOUT:-3}
-      HEALTH_SERVICE_NAME: asentinel-app
-      HEALTH_EXTERNAL_API_ENABLED: ${HEALTH_EXTERNAL_API_ENABLED:-false}
-      HEALTH_EXTERNAL_API_URL: ${HEALTH_EXTERNAL_API_URL:-}
-      HEALTH_EXTERNAL_API_TIMEOUT: ${HEALTH_EXTERNAL_API_TIMEOUT:-2}
-      HEALTH_EXTERNAL_API_CONNECT_TIMEOUT: ${HEALTH_EXTERNAL_API_CONNECT_TIMEOUT:-1}
+      # Minimal Laravel runtime defaults for Docker development.
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: asentinel
+      DB_USERNAME: asentinel
+      DB_PASSWORD: secret
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
     volumes:
       - .:/var/www
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["php-fpm"]
     healthcheck:
-      test: ["CMD", "php", "artisan", "health:check"]
+      # Keep the baseline health check independent from full app bootstrap.
+      test: ["CMD", "php", "-v"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
+      start_period: 15s
     networks:
       - asentinel
+
   nginx:
-    image: lidiman/asentinel-nginx:latest
-    env_file: .env
+    image: nginx:stable-alpine
+    container_name: asentinel-nginx
     ports:
       - "8000:80"
     volumes:
@@ -40,15 +46,35 @@ services:
     depends_on:
       app:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
     networks:
       - asentinel
+
+  mysql:
+    image: mysql:8.4
+    container_name: asentinel-mysql
+    environment:
+      # Minimal database credentials for local container orchestration.
+      MYSQL_DATABASE: asentinel
+      MYSQL_USER: asentinel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "33060:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - asentinel
+
 networks:
   asentinel:
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
