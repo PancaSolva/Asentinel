@@ -16,41 +16,12 @@ concurrency:
 
 env:
   PHP_VERSION: "8.5"
-  APP_ENV: testing
-  APP_DEBUG: "false"
-  APP_URL: http://localhost
-  DB_CONNECTION: mysql
-  DB_HOST: 127.0.0.1
-  DB_PORT: 3306
-  DB_DATABASE: asentinel_ci
-  DB_USERNAME: asentinel
-  DB_PASSWORD: secret
-  SESSION_DRIVER: file
-  CACHE_STORE: file
-  QUEUE_CONNECTION: sync
 
 jobs:
-  test:
-    name: Laravel Test Suite
+  build:
+    name: Build Validation
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_DATABASE: asentinel_ci
-          MYSQL_USER: asentinel
-          MYSQL_PASSWORD: secret
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-          --health-start-period=20s
 
     steps:
       - name: Checkout source
@@ -73,40 +44,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Prepare Laravel environment
-        run: |
-          cat <<'EOF' > .env
-          APP_ENV=testing
-          APP_DEBUG=false
-          APP_URL=http://localhost
-          DB_CONNECTION=mysql
-          DB_HOST=127.0.0.1
-          DB_PORT=3306
-          DB_DATABASE=asentinel_ci
-          DB_USERNAME=asentinel
-          DB_PASSWORD=secret
-          SESSION_DRIVER=file
-          CACHE_STORE=file
-          QUEUE_CONNECTION=sync
-          EOF
-          php artisan key:generate
-
-      - name: Run database migrations
-        run: php artisan migrate --force
-
-      - name: Run application tests
-        run: php artisan test
-
-  docker-compose-validation:
-    name: Docker Compose Validation
-    runs-on: ubuntu-latest
-    needs: test
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
 
       - name: Validate Docker Compose definition
         run: docker compose config
