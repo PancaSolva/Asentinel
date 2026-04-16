@@ -22,7 +22,7 @@ class ServiceController extends Controller
         $validator = Validator::make($request->all(), [
             'id_aplikasi' => 'required|exists:aplikasi,id_aplikasi',
             'nama' => 'required|string|max:255',
-            'tipe_service' => 'nullable|string|max:255',
+            'type_service' => 'nullable|string|max:255',
             'ip_local' => 'nullable|string|max:255',
             'url_service' => 'nullable|string|max:255',
             'url_repository' => 'nullable|string|max:255',
@@ -54,7 +54,7 @@ class ServiceController extends Controller
         $validator = Validator::make($request->all(), [
             'id_aplikasi' => 'sometimes|required|exists:aplikasi,id_aplikasi',
             'nama' => 'sometimes|required|string|max:255',
-            'tipe_service' => 'nullable|string|max:255',
+            'type_service' => 'nullable|string|max:255',
             'ip_local' => 'nullable|string|max:255',
             'url_service' => 'nullable|string|max:255',
             'url_repository' => 'nullable|string|max:255',

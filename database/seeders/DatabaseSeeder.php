@@ -15,47 +15,57 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Admin User
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@asentinel.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@asentinel.com'],
+            [
+                'name' => 'Admin User',
+                'password' => Hash::make('password'),
+                'email_verified_at' => Carbon::now(),
+            ]
+        );
 
         // Monolith App
-        $monolith = Aplikasi::create([
-            'nama' => 'Main Website',
-            'deskripsi' => 'Corporate landing page',
-            'tipe' => 'monolith',
-            'ip_local' => '192.168.1.10',
-            'url_service' => 'https://www.google.com',
-        ]);
+        $monolith = Aplikasi::updateOrCreate(
+            ['nama' => 'Main Website'],
+            [
+                'deskripsi' => 'Corporate landing page',
+                'tipe' => 'monolith',
+                'ip_local' => '192.168.1.10',
+                'url_service' => 'https://www.google.com',
+            ]
+        );
 
         // Microservice App
-        $micro = Aplikasi::create([
-            'nama' => 'E-Commerce Suite',
-            'deskripsi' => 'Platform for online sales',
-            'tipe' => 'microservice',
-            'ip_local' => '192.168.1.20',
-        ]);
+        $micro = Aplikasi::updateOrCreate(
+            ['nama' => 'E-Commerce Suite'],
+            [
+                'deskripsi' => 'Platform for online sales',
+                'tipe' => 'microservice',
+                'ip_local' => '192.168.1.20',
+            ]
+        );
 
         // Services for Microservice
-        $s1 = Service::create([
-            'id_aplikasi' => $micro->id_aplikasi,
-            'nama' => 'Auth Service',
-            'type_service' => 'backend',
-            'url_service' => 'https://api.github.com',
-        ]);
+        $s1 = Service::updateOrCreate(
+            ['nama' => 'Auth Service', 'id_aplikasi' => $micro->id_aplikasi],
+            [
+                'type_service' => 'backend',
+                'url_service' => 'https://api.github.com',
+            ]
+        );
 
-        $s2 = Service::create([
-            'id_aplikasi' => $micro->id_aplikasi,
-            'nama' => 'Payment Gateway',
-            'tipe_service' => 'backend',
-            'url_service' => 'https://invalid-url-for-testing.com',
-        ]);
+        $s2 = Service::updateOrCreate(
+            ['nama' => 'Payment Gateway', 'id_aplikasi' => $micro->id_aplikasi],
+            [
+                'type_service' => 'backend',
+                'url_service' => 'https://invalid-url-for-testing.com',
+            ]
+        );
 
         // Initial Logs
         LogMonitor::create([
             'id_aplikasi' => $monolith->id_aplikasi,
+            'id_service' => null,
             'url' => $monolith->url_service,
             'status' => 'UP',
             'http_status_code' => 200,

@@ -16,7 +16,7 @@ class Service extends Model
     protected $fillable = [
         'id_aplikasi',
         'nama',
-        'tipe_service',
+        'type_service',
         'ip_local',
         'url_service',
         'url_repository',
