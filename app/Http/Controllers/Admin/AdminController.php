@@ -52,4 +52,8 @@ class AdminController extends Controller
             'message' => 'Logged out successfully'
         ]);
     }
+    public function ShowLogin()
+    {
+        return view('admin.login');
+    }
 }
