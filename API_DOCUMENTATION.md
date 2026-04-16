@@ -71,3 +71,13 @@ To access these endpoints, the user must be logged in as an admin. The API uses 
   - `GET /{id}` : Show anomali log detail
   - `PUT /{id}` : Update anomali log
   - `DELETE /{id}` : Delete anomali log
+
+## 6. Pin Management
+- **URL**: `/admin/api/pin`
+- **Body Parameters**: `id_user`, `id_aplikasi`
+- **Endpoints**:
+  - `GET /` : List all pins
+  - `POST /` : Create pin
+  - `GET /{id}` : Show pin detail
+  - `PUT /{id}` : Update pin
+  - `DELETE /{id}` : Delete pin

@@ -7,11 +7,21 @@ use App\Http\Controllers\Admin\Api\AplikasiController;
 use App\Http\Controllers\Admin\Api\ServiceController;
 use App\Http\Controllers\Admin\Api\LogMonitorController;
 use App\Http\Controllers\Admin\Api\LogAnomaliController;
+use App\Http\Controllers\Api\api as PinApiController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// User-accessible API for Pins
+Route::prefix('api')->group(function () {
+    Route::get('/pin', [PinApiController::class, 'index']);
+    Route::post('/pin', [PinApiController::class, 'store']);
+    Route::get('/pin/{id}', [PinApiController::class, 'show']);
+    Route::put('/pin/{id}', [PinApiController::class, 'update']);
+    Route::delete('/pin/{id}', [PinApiController::class, 'destroy']);
 });
 
 Route::get('/login', [AdminController::class, 'showLogin'])->name('login'); //ambil data dg alamat login
