@@ -76,7 +76,20 @@ jobs:
 
       - name: Prepare Laravel environment
         run: |
-          cp .env.example .env
+          cat <<'EOF' > .env
+          APP_ENV=testing
+          APP_DEBUG=false
+          APP_URL=http://localhost
+          DB_CONNECTION=mysql
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_DATABASE=asentinel_ci
+          DB_USERNAME=asentinel
+          DB_PASSWORD=secret
+          SESSION_DRIVER=file
+          CACHE_STORE=file
+          QUEUE_CONNECTION=sync
+          EOF
           php artisan key:generate
 
       - name: Run database migrations
@@ -94,9 +107,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Prepare Docker environment
-        run: cp .env.example .env
 
       - name: Validate Docker Compose definition
         run: docker compose config

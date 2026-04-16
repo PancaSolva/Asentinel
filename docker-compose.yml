@@ -2,8 +2,6 @@ services:
   app:
     image: php:8.3-fpm-alpine
     container_name: asentinel-app
-    env_file:
-      - .env
     working_dir: /var/www
     environment:
       # Minimal Laravel runtime defaults for Docker development.
