@@ -5,12 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\LogAnomali;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
+    public function index()
+    {
+        return view('admin.dashboard');
+    }
+
     public function login(Request $request)
     {
         $request->validate([

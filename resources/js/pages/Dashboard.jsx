@@ -28,6 +28,7 @@ const Dashboard = () => {
     const [checking, setChecking] = useState(false);
     const [selectedLog, setSelectedLog] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [newLogIds, setNewLogIds] = useState(new Set());
 
     useEffect(() => {
         fetchDashboardData();
@@ -35,7 +36,29 @@ const Dashboard = () => {
         const channel = window.Echo.channel('monitoring')
             .listen('MonitoringUpdated', (e) => {
                 console.log('Monitoring update received:', e.log);
-                fetchDashboardData();
+                
+                // Track new log ID for animation
+                setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));
+
+                // Update monitoring data smoothly by prepending the new log locally first
+                setMonitoringData(prevData => {
+                    if (prevData.some(log => log.id_log_monitor === e.log.id_log_monitor)) {
+                        return prevData;
+                    }
+                    return [e.log, ...prevData].slice(0, 10);
+                });
+
+                // Then fetch everything in background to update stats and ensure data consistency
+                fetchDashboardData(false);
+
+                // Remove the "new" highlight after some time
+                setTimeout(() => {
+                    setNewLogIds(prev => {
+                        const next = new Set(prev);
+                        next.delete(e.log.id_log_monitor);
+                        return next;
+                    });
+                }, 3000);
             });
 
         return () => {
@@ -43,9 +66,9 @@ const Dashboard = () => {
         };
     }, []);
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             const [statsRes, monitorRes] = await Promise.all([
                 axios.get('/api/admin/dashboard-stats'),
                 axios.get('/api/admin/monitoring-logs')
@@ -55,7 +78,7 @@ const Dashboard = () => {
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
@@ -63,7 +86,8 @@ const Dashboard = () => {
         try {
             setChecking(true);
             await axios.post('/api/admin/run-monitoring');
-            await fetchDashboardData();
+            // Background refresh after manual trigger without showing loading flash
+            await fetchDashboardData(false);
         } catch (error) {
             console.error('Error running monitoring check:', error);
         } finally {
@@ -211,6 +235,11 @@ const Dashboard = () => {
                     data={monitoringData}
                     loading={loading}
                     emptyMessage="Infrastructure looks quiet. No monitoring data available."
+                    rowClassName={(row) => 
+                        newLogIds.has(row.id_log_monitor) 
+                        ? 'bg-blue-50/50 animate-in fade-in slide-in-from-top-2 duration-1000' 
+                        : ''
+                    }
                 />
             </div>
 
