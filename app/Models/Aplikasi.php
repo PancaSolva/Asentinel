@@ -23,6 +23,7 @@ class Aplikasi extends Model
         'url_api_docs',
         'status',
         'lastchecked',
+        'interval',
         'last_response_time',
         'last_status_code',
     ];

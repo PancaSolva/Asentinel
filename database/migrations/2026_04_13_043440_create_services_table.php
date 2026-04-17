@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('url_repository')->nullable();
             $table->string('url_api_docs')->nullable();
             $table->string('status')->default('UP');
+            $table->integer('interval_check')->default(20);
             $table->timestamp('lastchecked')->nullable();
             $table->timestamps('created_at', 'updated_at');
         });

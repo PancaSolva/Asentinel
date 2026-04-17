@@ -22,6 +22,7 @@ class Service extends Model
         'url_repository',
         'url_api_docs',
         'status',
+        'interval_check',
         'lastchecked',
         'last_response_time',
         'last_status_code',

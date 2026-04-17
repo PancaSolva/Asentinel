@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('url_service')->nullable();
             $table->string('url_repository')->nullable();
             $table->string('url_api_docs')->nullable();
+            $table->integer('interval')->default(20);
             $table->timestamps();
         });
     }
