@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Table = ({ columns, data, loading, emptyMessage = "No data found." }) => {
+const Table = ({ columns, data, loading, emptyMessage = "No data found.", rowClassName }) => {
     return (
         <div className="w-full overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -30,15 +30,24 @@ const Table = ({ columns, data, loading, emptyMessage = "No data found." }) => {
                             </td>
                         </tr>
                     ) : (
-                        data.map((row, rowIdx) => (
-                            <tr key={rowIdx} className="hover:bg-gray-50/50 transition-colors group">
-                                {columns.map((col, colIdx) => (
-                                    <td key={colIdx} className={`px-6 py-4 ${col.className || ''}`}>
-                                        {col.render ? col.render(row) : row[col.key]}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))
+                        data.map((row, rowIdx) => {
+                            // Use a unique ID from the row if available, otherwise fallback to index
+                            const rowKey = row.id_log_monitor || row.id || rowIdx;
+                            const customRowClass = rowClassName ? rowClassName(row) : '';
+                            
+                            return (
+                                <tr 
+                                    key={rowKey} 
+                                    className={`hover:bg-gray-50/50 transition-all duration-500 group ${customRowClass}`}
+                                >
+                                    {columns.map((col, colIdx) => (
+                                        <td key={colIdx} className={`px-6 py-4 ${col.className || ''}`}>
+                                            {col.render ? col.render(row) : row[col.key]}
+                                        </td>
+                                    ))}
+                                </tr>
+                            );
+                        })
                     )}
                 </tbody>
             </table>

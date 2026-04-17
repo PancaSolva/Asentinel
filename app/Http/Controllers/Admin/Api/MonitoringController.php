@@ -9,6 +9,7 @@ use App\Models\LogMonitor;
 use App\Models\LogAnomali;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Events\MonitoringUpdated;
 use Carbon\Carbon;
 
 class MonitoringController extends Controller
@@ -52,69 +53,24 @@ class MonitoringController extends Controller
 
     public function runCheck()
     {
-        $aplikasis = Aplikasi::where('tipe', 'monolith')->get();
+        $monoliths = Aplikasi::where('tipe', 'monolith')->get();
         $services = Service::all();
 
-        $results = [];
-
-        // Check monolith applications
-        foreach ($aplikasis as $app) {
-            if ($app->url_service) {
-                $results[] = $this->pingEndpoint($app->url_service, $app->id_aplikasi, null);
-            }
-        }
-
-        // Check microservices
-        foreach ($services as $service) {
-            if ($service->url_service) {
-                $results[] = $this->pingEndpoint($service->url_service, $service->id_aplikasi, $service->id_service);
-            }
-        }
+        $this->dispatchJobs($monoliths);
+        $this->dispatchJobs($services);
 
         return response()->json([
             'success' => true,
-            'message' => 'Monitoring check completed',
-            'data' => $results
+            'message' => 'Monitoring jobs dispatched to queue',
         ]);
     }
 
-    private function pingEndpoint($url, $id_aplikasi, $id_service)
+    private function dispatchJobs($collection)
     {
-        $startTime = microtime(true);
-        $status = 'DOWN';
-        $httpCode = 0;
-        
-        try {
-            $response = Http::timeout(5)->get($url);
-            $httpCode = $response->status();
-            $status = ($httpCode >= 200 && $httpCode < 300) ? 'UP' : 'DOWN';
-        } catch (\Exception $e) {
-            $status = 'DOWN';
+        foreach ($collection as $item) {
+            if ($item->url_service) {
+                \App\Jobs\CheckServiceJob::dispatch($item);
+            }
         }
-
-        $endTime = microtime(true);
-        $responseTime = round(($endTime - $startTime) * 1000);
-
-        $log = LogMonitor::create([
-            'id_aplikasi' => $id_aplikasi,
-            'id_service' => $id_service,
-            'url' => $url,
-            'status' => $status,
-            'http_status_code' => $httpCode,
-            'response_time_ms' => $responseTime,
-            'checked_at' => Carbon::now(),
-        ]);
-
-        if ($status === 'DOWN') {
-            LogAnomali::create([
-                'id_aplikasi' => $id_aplikasi,
-                'id_service' => $id_service,
-                'description' => "Endpoint {$url} is DOWN with status code {$httpCode}",
-                'severity' => 'high',
-                'detected_at' => Carbon::now(),
-            ]);
-        }
-
-        return $log;
     }
 }

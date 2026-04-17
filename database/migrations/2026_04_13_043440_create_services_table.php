@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('url_service')->nullable();
             $table->string('url_repository')->nullable();
             $table->string('url_api_docs')->nullable();
-            $table->string('status')->default('active');
+            $table->string('status')->default('UP');
             $table->timestamp('lastchecked')->nullable();
             $table->timestamps('created_at', 'updated_at');
         });

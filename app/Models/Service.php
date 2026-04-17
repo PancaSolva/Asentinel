@@ -21,6 +21,10 @@ class Service extends Model
         'url_service',
         'url_repository',
         'url_api_docs',
+        'status',
+        'lastchecked',
+        'last_response_time',
+        'last_status_code',
     ];
 
     public function aplikasi()
