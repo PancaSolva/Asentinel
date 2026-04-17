@@ -6,17 +6,11 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 // ── SVG Logos ──────────────────────────────────────────────────────────────────
 
 const KominfoLogo = () => (
-  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="48" fill="white" />
-    <circle cx="50" cy="50" r="38" fill="#1a56db" />
-    {/* Eye/radar icon */}
-    <ellipse cx="50" cy="50" rx="28" ry="18" stroke="white" strokeWidth="4" fill="none"/>
-    <circle cx="50" cy="50" r="8" fill="white"/>
-    <circle cx="50" cy="50" r="3" fill="#1a56db"/>
-    {/* Antenna arcs */}
-    <path d="M30 30 Q50 10 70 30" stroke="white" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-    <path d="M22 22 Q50 -2 78 22" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6"/>
-  </svg>
+  <img 
+    src="/images/logo-kominfo.svg" 
+    alt="Logo Kominfo" 
+    style={{ width: '68px', height: '68px', objectFit: 'contain' }} 
+  />
 );
 
 const SentinelLogo = () => (
@@ -541,15 +535,11 @@ export default function Login() {
           <div className="footer-brand">
             {/* Kominfo foot logo */}
             <div className="kominfo-foot">
-              <svg width="38" height="38" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="48" fill="white"/>
-                <circle cx="50" cy="50" r="38" fill="#1a56db"/>
-                <ellipse cx="50" cy="50" rx="28" ry="18" stroke="white" strokeWidth="4" fill="none"/>
-                <circle cx="50" cy="50" r="8" fill="white"/>
-                <circle cx="50" cy="50" r="3" fill="#1a56db"/>
-                <path d="M30 30 Q50 10 70 30" stroke="white" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-                <path d="M22 22 Q50 -2 78 22" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6"/>
-              </svg>
+            <img 
+              src="/images/logo-kominfo.svg" 
+               alt="Logo Kominfo" 
+              style={{ width: '68px', height: '68px', objectFit: 'contain' }} 
+            />
               <div className="kominfo-foot-text">KOMINFO<br/>JATIM</div>
             </div>
 
