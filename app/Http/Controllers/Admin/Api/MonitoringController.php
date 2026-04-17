@@ -10,6 +10,7 @@ use App\Models\LogAnomali;
 use App\Services\AlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Events\MonitoringUpdated;
 use Carbon\Carbon;
 
 class MonitoringController extends Controller
@@ -53,45 +54,26 @@ class MonitoringController extends Controller
 
     public function runCheck()
     {
-        $aplikasis = Aplikasi::where('tipe', 'monolith')->get();
+        $monoliths = Aplikasi::where('tipe', 'monolith')->get();
         $services = Service::all();
 
-        $results = [];
-
-        // Check monolith applications
-        foreach ($aplikasis as $app) {
-            if ($app->url_service) {
-                $results[] = $this->pingEndpoint($app->url_service, $app->id_aplikasi, null);
-            }
-        }
-
-        // Check microservices
-        foreach ($services as $service) {
-            if ($service->url_service) {
-                $results[] = $this->pingEndpoint($service->url_service, $service->id_aplikasi, $service->id_service);
-            }
-        }
+        $this->dispatchJobs($monoliths);
+        $this->dispatchJobs($services);
 
         return response()->json([
             'success' => true,
-            'message' => 'Monitoring check completed',
-            'data' => $results
+            'message' => 'Monitoring jobs dispatched to queue',
         ]);
     }
 
-    private function pingEndpoint($url, $id_aplikasi, $id_service)
+    private function dispatchJobs($collection)
     {
-        $startTime = microtime(true);
-        $status = 'DOWN';
-        $httpCode = 0;
-        
-        try {
-            $response = Http::timeout(5)->get($url);
-            $httpCode = $response->status();
-            $status = ($httpCode >= 200 && $httpCode < 300) ? 'UP' : 'DOWN';
-        } catch (\Exception $e) {
-            $status = 'DOWN';
+        foreach ($collection as $item) {
+            if ($item->url_service) {
+                \App\Jobs\CheckServiceJob::dispatch($item);
+            }
         }
+<<<<<<< HEAD
 
         $endTime = microtime(true);
         $responseTime = round(($endTime - $startTime) * 1000);
@@ -128,5 +110,7 @@ class MonitoringController extends Controller
         }
 
         return $log;
+=======
+>>>>>>> 5a1832d642a464ce48d2c00f1ead31b44e3e6573
     }
 }

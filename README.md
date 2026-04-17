@@ -1,58 +1,95 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Asentinel - Infrastructure & Service Monitoring
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Asentinel is a modern Laravel-based monitoring system designed to track the health and performance of applications and microservices in real-time. It features an aesthetic dark mode dashboard, real-time updates via Laravel Reverb, and automated health checks.
 
-## About Laravel
+## **System Requirements**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+To run Asentinel, your environment must meet the following requirements:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### **Backend**
+- **PHP**: ^8.3
+- **PHP Extensions**: 
+  - `bcmath`, `ctype`, `fileinfo`, `json`, `mbstring`, `openssl`, `pdo_sqlite` (or `pdo_mysql`), `tokenizer`, `xml`.
+- **Composer**: ^2.0
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### **Frontend**
+- **Node.js**: ^20.0
+- **NPM**: ^10.0
+- **Vite**: ^8.0 (included in dev dependencies)
 
-## Learning Laravel
+### **Infrastructure**
+- **Database**: 
+  - **Local**: SQLite (default)
+  - **Production**: MySQL 8.4+ / PostgreSQL
+- **Real-time Engine**: Laravel Reverb (requires a persistent background process)
+- **Queue Worker**: Database or Redis (required for background health checks)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## **Installation & Setup**
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### **1. Clone & Dependencies**
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repository-url>
+cd Asentinel
+composer install
+npm install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### **2. Environment Configuration**
+Copy the example environment file and generate the application key:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+*Note: Ensure your `DB_CONNECTION` is set correctly. For SQLite, the database file will be created automatically in `database/database.sqlite`.*
 
-## Contributing
+### **3. Database Initialization**
+Run the migrations and seed the initial admin user and sample data:
+```bash
+php artisan migrate --seed
+```
+*Default Admin Credentials:*
+- **Email**: `admin@asentinel.com`
+- **Password**: `password`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### **4. Build Frontend Assets**
+```bash
+npm run build
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## **Running the Application**
 
-## Security Vulnerabilities
+Asentinel requires several processes to run concurrently for full functionality:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### **Development (All-in-one)**
+The project includes a pre-configured `concurrently` command:
+```bash
+composer run dev
+```
+This command starts:
+- **Laravel Server** (`php artisan serve`)
+- **Queue Worker** (`php artisan queue:listen`)
+- **Real-time Server** (`php artisan reverb:start`)
+- **Vite Dev Server** (`npm run dev`)
 
-## License
+### **Production**
+In production, use **Supervisor** to manage background processes. Refer to [MONITOR_DOCUMENTATION.md](MONITOR_DOCUMENTATION.md) for detailed production setup guides including:
+- **Cron Job**: For scheduling health checks (`php artisan schedule:run`).
+- **Supervisor**: For keeping queue workers and Reverb alive.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## **Key Features & Tech Stack**
+- **Laravel 13**: Robust backend framework.
+- **React 19 & Vite**: Modern, fast frontend.
+- **Tailwind CSS v4**: Aesthetic dark mode design.
+- **Laravel Reverb**: WebSocket-based real-time data broadcasting.
+- **Alpine.js**: Lightweight reactivity for administrative views.
+
+---
+
+## **License**
+This project is licensed under the MIT license.
