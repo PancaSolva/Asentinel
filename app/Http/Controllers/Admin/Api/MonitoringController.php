@@ -73,44 +73,5 @@ class MonitoringController extends Controller
                 \App\Jobs\CheckServiceJob::dispatch($item);
             }
         }
-<<<<<<< HEAD
-
-        $endTime = microtime(true);
-        $responseTime = round(($endTime - $startTime) * 1000);
-
-        $log = LogMonitor::create([
-            'id_aplikasi' => $id_aplikasi,
-            'id_service' => $id_service,
-            'url' => $url,
-            'status' => $status,
-            'http_status_code' => $httpCode,
-            'response_time_ms' => $responseTime,
-            'checked_at' => Carbon::now(),
-        ]);
-
-        if ($status === 'DOWN') {
-            LogAnomali::create([
-                'id_aplikasi' => $id_aplikasi,
-                'id_service' => $id_service,
-                'description' => "Endpoint {$url} is DOWN with status code {$httpCode}",
-                'severity' => 'high',
-                'detected_at' => Carbon::now(),
-            ]);
-
-            // ADDED: alerting system call for manual DOWN detections.
-            app(AlertService::class)->sendAlertIfNeeded(
-                $url,
-                $url,
-                $httpCode,
-                null,
-                $id_aplikasi,
-                $id_service,
-                Carbon::now()->toIso8601String(),
-            );
-        }
-
-        return $log;
-=======
->>>>>>> 5a1832d642a464ce48d2c00f1ead31b44e3e6573
     }
 }
