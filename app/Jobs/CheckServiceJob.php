@@ -55,10 +55,8 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
-        // 🔥 bedain URL service vs monolith
-        $url = $this->isService
-            ? $model->url_service
-            : $model->url;
+        // 🔥 Get the URL to check
+        $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
             Log::error("Invalid URL", [
@@ -87,7 +85,7 @@ class CheckServiceJob implements ShouldQueue
 
             // ✅ simpan log
             $log = LogMonitor::create([
-                'id_aplikasi' => $this->isService ? $model->id_aplikasi : $model->id_aplikasi,
+                'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
                 'url' => $url,
                 'status' => 'UP',
@@ -114,7 +112,7 @@ class CheckServiceJob implements ShouldQueue
             }
 
             $log = LogMonitor::create([
-                'id_aplikasi' => $this->isService ? $model->id_aplikasi : $model->id_aplikasi,
+                'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
                 'url' => $url,
                 'status' => 'DOWN',
@@ -123,7 +121,7 @@ class CheckServiceJob implements ShouldQueue
             ]);
 
             LogAnomali::create([
-                'id_aplikasi' => $this->isService ? $model->id_aplikasi : $model->id_aplikasi,
+                'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
                 'description' => "Endpoint {$url} is DOWN",
                 'severity' => 'high',
