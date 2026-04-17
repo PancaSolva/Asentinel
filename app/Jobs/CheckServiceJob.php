@@ -5,11 +5,8 @@ namespace App\Jobs;
 use App\Models\Service;
 use App\Models\Aplikasi;
 use App\Models\LogMonitor;
-<<<<<<< HEAD
 use App\Services\AlertService;
-=======
 use App\Models\LogAnomali;
->>>>>>> 5a1832d642a464ce48d2c00f1ead31b44e3e6573
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -124,18 +121,6 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
-<<<<<<< HEAD
-            // ADDED: alerting system call for queued DOWN detections.
-            app(AlertService::class)->sendAlertIfNeeded(
-                $service->nama,
-                $service->url_service,
-                0,
-                $e->getMessage(),
-                $service->id_aplikasi,
-                $service->id_service,
-                now()->toIso8601String(),
-            );
-=======
             LogAnomali::create([
                 'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
@@ -144,8 +129,17 @@ class CheckServiceJob implements ShouldQueue
                 'detected_at' => now(),
             ]);
 
+            app(AlertService::class)->sendAlertIfNeeded(
+                $model->nama ?? $url,
+                $url,
+                0,
+                $e->getMessage(),
+                $model->id_aplikasi,
+                $this->isService ? $model->id_service : null,
+                now()->toIso8601String(),
+            );
+
             broadcast(new MonitoringUpdated($log));
->>>>>>> 5a1832d642a464ce48d2c00f1ead31b44e3e6573
         }
     }
 }
