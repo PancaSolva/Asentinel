@@ -8,7 +8,13 @@
     @vite(['resources/css/app.css', 'resources/js/main.jsx'])
 </head>
 <body class="bg-gray-50 dark:bg-gray-900">
-    <!-- Test -->
+    @if(session('spa_token'))
+        <script>
+            localStorage.setItem('token', "{{ session('spa_token') }}");
+            localStorage.setItem('user', @json(session('admin_user')));
+        </script>
+        @php session()->forget('spa_token'); @endphp
+    @endif
     <div id="root"></div>
 </body>
 </html>

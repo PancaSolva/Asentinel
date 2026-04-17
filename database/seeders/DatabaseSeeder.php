@@ -24,63 +24,60 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Monolith App
-        $monolith = Aplikasi::updateOrCreate(
-            ['nama' => 'Main Website'],
-            [
-                'deskripsi' => 'Corporate landing page',
-                'tipe' => 'monolith',
-                'ip_local' => '192.168.1.10',
-                'url_service' => 'https://www.google.com',
-            ]
-        );
+        $urls = [
+            'https://www.google.com', 'https://github.com', 'https://api.github.com',
+            'https://www.cloudflare.com', 'https://www.apple.com', 'https://www.microsoft.com',
+            'https://www.wikipedia.org', 'https://www.amazon.com', 'https://www.reddit.com',
+            'https://www.linkedin.com', 'https://www.facebook.com', 'https://www.twitter.com',
+            'https://www.instagram.com', 'https://www.tiktok.com', 'https://www.youtube.com',
+            'https://www.netflix.com', 'https://www.spotify.com', 'https://www.discord.com',
+            'https://www.slack.com', 'https://www.zoom.us', 'https://www.dropbox.com',
+            'https://www.adobe.com', 'https://www.salesforce.com', 'https://www.oracle.com',
+            'https://www.ibm.com', 'https://www.intel.com', 'https://www.nvidia.com',
+            'https://www.amd.com', 'https://www.samsung.com', 'https://www.sony.com'
+        ];
 
-        // Microservice App
-        $micro = Aplikasi::updateOrCreate(
-            ['nama' => 'E-Commerce Suite'],
-            [
-                'deskripsi' => 'Platform for online sales',
-                'tipe' => 'microservice',
-                'ip_local' => '192.168.1.20',
-            ]
-        );
+        // 10 Monolith Apps
+        for ($i = 1; $i <= 10; $i++) {
+            Aplikasi::updateOrCreate(
+                ['nama' => "Monolith App {$i}"],
+                [
+                    'deskripsi' => "A large-scale monolithic application version {$i}.",
+                    'tipe' => 'monolith',
+                    'ip_local' => "192.168.1." . (10 + $i),
+                    'url_service' => $urls[$i - 1],
+                ]
+            );
+        }
 
-        // Services for Microservice
-        $s1 = Service::updateOrCreate(
-            ['nama' => 'Auth Service', 'id_aplikasi' => $micro->id_aplikasi],
-            [
-                'type_service' => 'backend',
-                'url_service' => 'https://api.github.com',
-            ]
-        );
+        // 10 Microservice Apps each with 2 subservices
+        for ($i = 1; $i <= 10; $i++) {
+            $app = Aplikasi::updateOrCreate(
+                ['nama' => "Microservice Suite {$i}"],
+                [
+                    'deskripsi' => "A complex microservice-based architecture {$i}.",
+                    'tipe' => 'microservice',
+                    'ip_local' => "192.168.2." . (10 + $i),
+                ]
+            );
 
-        $s2 = Service::updateOrCreate(
-            ['nama' => 'Payment Gateway', 'id_aplikasi' => $micro->id_aplikasi],
-            [
-                'type_service' => 'backend',
-                'url_service' => 'https://invalid-url-for-testing.com',
-            ]
-        );
+            // Subservice 1
+            Service::updateOrCreate(
+                ['nama' => "Auth Service {$i}", 'id_aplikasi' => $app->id_aplikasi],
+                [
+                    'type_service' => 'backend',
+                    'url_service' => $urls[9 + ($i * 2 - 1)],
+                ]
+            );
 
-        // Initial Logs
-        LogMonitor::create([
-            'id_aplikasi' => $monolith->id_aplikasi,
-            'id_service' => null,
-            'url' => $monolith->url_service,
-            'status' => 'UP',
-            'http_status_code' => 200,
-            'response_time_ms' => 150,
-            'checked_at' => Carbon::now(),
-        ]);
-
-        LogMonitor::create([
-            'id_aplikasi' => $micro->id_aplikasi,
-            'id_service' => $s1->id_service,
-            'url' => $s1->url_service,
-            'status' => 'UP',
-            'http_status_code' => 200,
-            'response_time_ms' => 240,
-            'checked_at' => Carbon::now(),
-        ]);
+            // Subservice 2
+            Service::updateOrCreate(
+                ['nama' => "Payment Gateway {$i}", 'id_aplikasi' => $app->id_aplikasi],
+                [
+                    'type_service' => 'backend',
+                    'url_service' => $urls[9 + ($i * 2)],
+                ]
+            );
+        }
     }
 }

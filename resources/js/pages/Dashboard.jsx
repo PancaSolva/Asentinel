@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { 
     Activity, 
     AppWindow, 
@@ -70,8 +70,8 @@ const Dashboard = () => {
         try {
             if (showLoading) setLoading(true);
             const [statsRes, monitorRes] = await Promise.all([
-                axios.get('/api/admin/dashboard-stats'),
-                axios.get('/api/admin/monitoring-logs')
+                api.get('/dashboard-stats'),
+                api.get('/monitoring-logs')
             ]);
             setStats(statsRes.data.data);
             setMonitoringData(monitorRes.data.data);
@@ -85,7 +85,7 @@ const Dashboard = () => {
     const runMonitoringCheck = async () => {
         try {
             setChecking(true);
-            await axios.post('/api/admin/run-monitoring');
+            await api.post('/run-monitoring');
             // Background refresh after manual trigger without showing loading flash
             await fetchDashboardData(false);
         } catch (error) {

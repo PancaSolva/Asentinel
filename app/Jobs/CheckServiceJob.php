@@ -94,6 +94,7 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
+            $log->load(['aplikasi', 'service']);
             broadcast(new MonitoringUpdated($log));
 
         } catch (\Exception $e) {
@@ -119,6 +120,8 @@ class CheckServiceJob implements ShouldQueue
                 'http_status_code' => 0,
                 'checked_at' => now()
             ]);
+
+            $log->load(['aplikasi', 'service']);
 
             LogAnomali::create([
                 'id_aplikasi' => $model->id_aplikasi,
