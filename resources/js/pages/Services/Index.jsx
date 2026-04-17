@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { Plus, Edit, Trash2, Server, AppWindow, Search, Globe, Link as LinkIcon } from 'lucide-react';
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
@@ -29,7 +29,7 @@ const ServiceIndex = () => {
     const fetchServices = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/api/admin/services');
+            const res = await api.get('/services');
             setServices(res.data.data);
         } catch (error) {
             console.error('Error fetching services:', error);
@@ -40,7 +40,7 @@ const ServiceIndex = () => {
 
     const fetchAplikasis = async () => {
         try {
-            const res = await axios.get('/api/admin/aplikasi');
+            const res = await api.get('/aplikasi');
             setAplikasis(res.data.data.filter(app => app.tipe === 'microservice'));
         } catch (error) {
             console.error('Error fetching aplikasis:', error);
@@ -51,9 +51,9 @@ const ServiceIndex = () => {
         e.preventDefault();
         try {
             if (editingService) {
-                await axios.put(`/api/admin/services/${editingService.id_service}`, formData);
+                await api.put(`/services/${editingService.id_service}`, formData);
             } else {
-                await axios.post('/api/admin/services', formData);
+                await api.post('/services', formData);
             }
             setShowModal(false);
             setEditingService(null);
@@ -93,7 +93,7 @@ const ServiceIndex = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this service?')) {
             try {
-                await axios.delete(`/api/admin/services/${id}`);
+                await api.delete(`/services/${id}`);
                 fetchServices();
             } catch (error) {
                 console.error('Error deleting service:', error);
@@ -102,8 +102,8 @@ const ServiceIndex = () => {
     };
 
     const filteredData = services.filter(service => 
-        service.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.aplikasi?.nama.toLowerCase().includes(searchTerm.toLowerCase())
+        (service.nama || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.aplikasi?.nama || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const columns = [
