@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, AppWindow, Server, Activity, LogOut, User, ChevronDown, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, AppWindow, Server, Activity, LogOut, User, ChevronDown, AlertTriangle, Users } from 'lucide-react';
 import axios from 'axios';
 import Modal from '../components/Modal';
 
@@ -29,6 +29,7 @@ const Layout = () => {
         { name: 'Dashboard', path: '/', icon: <LayoutDashboard className="w-5 h-5" /> },
         { name: 'Aplikasi', path: '/aplikasi', icon: <AppWindow className="w-5 h-5" /> },
         { name: 'Services', path: '/services', icon: <Server className="w-5 h-5" /> },
+        ...(user.role === 'admin' ? [{ name: 'User Management', path: '/users', icon: <Users className="w-5 h-5" /> }] : []),
     ];
 
     const getPageTitle = () => {
