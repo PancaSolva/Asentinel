@@ -94,8 +94,8 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
-            $log->load(['aplikasi', 'service']);
-            broadcast(new MonitoringUpdated($log));
+$log->load(['aplikasi', 'service']);
+            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
 
         } catch (\Exception $e) {
             Log::error("Service DOWN", [
@@ -121,7 +121,7 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
-            $log->load(['aplikasi', 'service']);
+$log->load(['aplikasi', 'service']);
 
             LogAnomali::create([
                 'id_aplikasi' => $model->id_aplikasi,
@@ -131,7 +131,7 @@ class CheckServiceJob implements ShouldQueue
                 'detected_at' => now(),
             ]);
 
-            broadcast(new MonitoringUpdated($log));
+            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
         }
     }
 }
