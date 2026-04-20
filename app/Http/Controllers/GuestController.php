@@ -5,62 +5,82 @@ namespace App\Http\Controllers;
 use App\Models\WebGuest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class GuestController extends Controller
 {
-    public function addGuestAccess(Request $request, $id): JsonResponse
+    public function addGuestAccess(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'id_aplikasi' => 'required|exists:aplikasi,id',
-            'id_service' => 'nullable|exists:services,id_service',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        // Auth check
+        $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $data = $validator->validated();
-        $data['id'] = $id;
+        $validated = $request->validate([
+            'id' => 'required|exists:users,id',
+            'id_aplikasi' => 'required|exists:aplikasi,id',
+        ]);
 
-        // Check if already exists
-        $exists = WebGuest::where('id', $id)
-            ->where(function ($query) use ($data) {
-                $query->where('id_aplikasi', $data['id_aplikasi'])
-                      ->orWhere(function ($q) use ($data) {
-                          if (isset($data['id_service'])) {
-                              $q->where('id_service', $data['id_service']);
-                          }
-                      });
-            })->exists();
+        Log::info('Guest add request', $validated);
+
+        $exists = WebGuest::where('id', $validated['id'])
+            ->where('id_aplikasi', $validated['id_aplikasi'])
+            ->exists();
 
         if ($exists) {
             return response()->json(['error' => 'Guest access already exists'], 409);
         }
 
-        $guest = WebGuest::create($data);
-        $guest->load(['user', 'aplikasi', 'service']);
+        try {
+            $guest = \DB::transaction(function () use ($validated) {
+                $guest = WebGuest::create($validated);
+                return $guest->load(['user', 'aplikasi']);
+            });
+
+            Log::info('Guest created successfully', ['premission_id' => $guest->premission_id]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $guest
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('DB error creating guest', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Database error'], 500);
+        } catch (\Exception $e) {
+            Log::error('Error creating guest', [
+                'validated' => $validated,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to create guest'], 500);
+        }
+    }
+
+    public function removeGuestAccess(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'id' => 'required|exists:users,id',
+            'id_aplikasi' => 'required|exists:aplikasi,id',
+        ]);
+
+        $deleted = WebGuest::where('id', $validated['id'])
+            ->where('id_aplikasi', $validated['id_aplikasi'])
+            ->delete();
+
+        if (!$deleted) {
+            return response()->json(['error' => 'Record not found'], 404);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $guest
+            'message' => 'Guest access removed successfully'
         ]);
     }
 
-    public function removeGuestAccess(Request $request, $id): JsonResponse
+    public function guestAccessList(): JsonResponse
     {
-        $deleted = WebGuest::where('id', $id)->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Guest access removed successfully',
-            'deleted_count' => $deleted
-        ]);
-    }
-
-    public function guestAccessList(Request $request): JsonResponse
-    {
-        $guests = WebGuest::all();
+        
+        $guests = WebGuest::with(['user', 'aplikasi'])->get();
 
         return response()->json($guests);
     }

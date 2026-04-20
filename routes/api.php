@@ -22,15 +22,20 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     
     //Monitoring routes
     Route::get('dashboard-stats', [MonitoringController::class, 'dashboardStats']);
-    Route::get('monitoring-logs', [MonitoringController::class, 'monitoringLogs']);
+Route::get('monitoring-logs', [MonitoringController::class, 'monitoringLogs']);
     Route::post('run-monitoring', [MonitoringController::class, 'runCheck']);
+    
+    // Guest access routes
+    Route::post('add-guest', [GuestController::class, 'addGuestAccess']);
+    Route::delete('remove-guest', [GuestController::class, 'removeGuestAccess']);
+    Route::get('guest-list', [GuestController::class, 'guestAccessList']);
 
-    //Adding guest access routes
-    Route::put('add-guest/{id}', [GuestController::class, 'addGuestAccess']);
-    Route::delete('remove-guest/{id}', [GuestController::class, 'removeGuestAccess']);
-});
-
-Route::get('admin/guest-list', [GuestController::class, 'guestAccessList']);
+    });
+    
+    // Guest access routes
+    Route::post('add-guest', [GuestController::class, 'addGuestAccess']);
+    Route::delete('remove-guest', [GuestController::class, 'removeGuestAccess']);
+    Route::get('guest-list', [GuestController::class, 'guestAccessList']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

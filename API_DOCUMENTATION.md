@@ -88,3 +88,77 @@ To access these endpoints, the user must be logged in as an admin. The API uses 
   - `guest-list` : List all guest
   - `guest-add/{id}` : Add Guest
   - `remove-guest/{id}` : Remove Guest
+
+## 7. Guest Access Management
+**Base URL**: `http://127.0.0.1:8010/api`  
+**Authentication**: **None required** (public)
+
+### List all guest access
+```
+GET /admin/guest-list
+```
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "id": 2,
+    "id_aplikasi": 1,
+    "id_service": 3,
+    "user": {"id": 2, "name": "John Doe", "email": "john@example.com"},
+    "aplikasi": {"id": 1, "name": "My App"},
+    "service": {"id_service": 3, "nama_service": "My Service"}
+  }
+]
+```
+
+### Add guest access
+```
+POST /admin/add-guest/{user_id}/{id_service?}
+```
+**Path parameters**:
+- `user_id` (required): User ID
+- `id_service` (optional): Service ID (omit or use `/user_id/` for no service)
+
+**Body** (JSON):
+```json
+{
+  "id_aplikasi": 1  // Required, must exist in aplikasi table
+}
+```
+**Responses**:
+- **200 Success**: `{"success": true, "data": {...}}`
+- **422 Validation**: `{"errors": {"id_aplikasi": ["The id aplikasi field is required."]}}`
+- **409 Conflict**: `{"error": "Guest access already exists"}`
+
+### Remove guest access
+```
+DELETE /remove-guest/{user_id}/{id_service}
+```
+**Path parameters**:
+- `user_id`: User ID
+- `id_service`: Service ID
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Guest access removed successfully",
+  "deleted_count": 1
+}
+```
+
+**Example (curl)**:
+```bash
+# Add
+curl -X POST "http://127.0.0.1:8010/api/admin/add-guest/2/3" \
+  -H "Content-Type: application/json" \
+  -d '{"id_aplikasi": 1}'
+
+# List
+curl "http://127.0.0.1:8010/api/admin/guest-list"
+
+# Remove
+curl -X DELETE "http://127.0.0.1:8010/api/remove-guest/2/3"
+```
+

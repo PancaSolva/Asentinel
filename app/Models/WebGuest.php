@@ -13,7 +13,6 @@ class WebGuest extends Model
     protected $fillable = [
         'id',
         'id_aplikasi',
-        'id_service',
     ];
 
     public function user()

@@ -19,9 +19,6 @@ return new class extends Migration
             $table->foreignId('id_aplikasi')
                 ->constrained('aplikasi')
                 ->onDelete('cascade')->nullable();
-            $table->foreignId('id_service')
-                ->constrained('services', 'id_service')
-                ->onDelete('cascade')->nullable();
         });
     }
 
