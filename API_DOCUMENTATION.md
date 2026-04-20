@@ -82,3 +82,9 @@ To access these endpoints, the user must be logged in as an admin. The API uses 
   - `PUT /{id}` : Update pin
   - `DELETE /{id}` : Delete pin
 
+## 6. Premission Management (For Admin)
+- **URL**: '/admin/api/permission/{endpoint}'
+- **Endpoints**:
+  - `guest-list` : List all guest
+  - `guest-add/{id}` : Add Guest
+  - `remove-guest/{id}` : Remove Guest
