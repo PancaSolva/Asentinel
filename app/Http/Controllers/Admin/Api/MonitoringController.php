@@ -7,6 +7,7 @@ use App\Models\Aplikasi;
 use App\Models\Service;
 use App\Models\LogMonitor;
 use App\Models\LogAnomali;
+use App\Services\AlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Events\MonitoringUpdated;
