@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Models\Service;
 use App\Models\Aplikasi;
 use App\Models\LogMonitor;
-use App\Services\AlertService;
 use App\Models\LogAnomali;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -128,16 +127,6 @@ class CheckServiceJob implements ShouldQueue
                 'severity' => 'high',
                 'detected_at' => now(),
             ]);
-
-            app(AlertService::class)->sendAlertIfNeeded(
-                $model->nama ?? $url,
-                $url,
-                0,
-                $e->getMessage(),
-                $model->id_aplikasi,
-                $this->isService ? $model->id_service : null,
-                now()->toIso8601String(),
-            );
 
             broadcast(new MonitoringUpdated($log));
         }

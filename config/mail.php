@@ -49,18 +49,6 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
-        // ADDED: alerting system Gmail SMTP transport.
-        'alert_gmail' => [
-            'transport' => 'smtp',
-            'scheme' => env('ALERT_EMAIL_SCHEME', 'tls'),
-            'host' => env('ALERT_EMAIL_HOST', 'smtp.gmail.com'),
-            'port' => (int) env('ALERT_EMAIL_PORT', 587),
-            'username' => env('ALERT_EMAIL_FROM'),
-            'password' => env('ALERT_EMAIL_PASSWORD'),
-            'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
-        ],
-
         'ses' => [
             'transport' => 'ses',
         ],
