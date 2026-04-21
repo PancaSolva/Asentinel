@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('services:check')->everyMinute(3)->withoutOverlapping();
+Schedule::command('model:prune')->daily();

@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\MassPrunable;
 
 class LogAnomali extends Model
 {
-    use HasFactory;
+    use HasFactory, MassPrunable;
 
     protected $table = 'log_anomali';
     protected $primaryKey = 'id_log_anomali';
@@ -29,5 +30,13 @@ class LogAnomali extends Model
     public function service()
     {
         return $this->belongsTo(Service::class, 'id_service', 'id_service');
+    }
+
+    /**
+     * Get the prunable model query.
+     */
+    public function prunable()
+    {
+        return static::where('detected_at', '<', now()->subDays(30));
     }
 }

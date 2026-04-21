@@ -103,6 +103,8 @@ $log->load(['aplikasi', 'service']);
                 'error' => $e->getMessage()
             ]);
 
+            $wasDown = $model && $model->status === 'DOWN';
+
             // ❗ pastikan model masih ada sebelum update
             if ($model) {
                 $model->update([
@@ -123,13 +125,15 @@ $log->load(['aplikasi', 'service']);
 
 $log->load(['aplikasi', 'service']);
 
-            LogAnomali::create([
-                'id_aplikasi' => $model->id_aplikasi,
-                'id_service' => $this->isService ? $model->id_service : null,
-                'description' => "Endpoint {$url} is DOWN",
-                'severity' => 'high',
-                'detected_at' => now(),
-            ]);
+            if (!$wasDown) {
+                LogAnomali::create([
+                    'id_aplikasi' => $model->id_aplikasi,
+                    'id_service' => $this->isService ? $model->id_service : null,
+                    'description' => "Endpoint {$url} is DOWN",
+                    'severity' => 'high',
+                    'detected_at' => now(),
+                ]);
+            }
 
             // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
         }
