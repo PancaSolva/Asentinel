@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "26f1734b54bb71f6928404fa3b8d1e4d",
+    "content-hash": "4bc87bc486f68868fd03d5769466d32a",
     "packages": [
         {
             "name": "brick/math",
@@ -1052,6 +1052,78 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "hasinhayder/tyro",
+            "version": "v1.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hasinhayder/tyro.git",
+                "reference": "be0cdc820377966598e36d34ef650706318c1c77"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hasinhayder/tyro/zipball/be0cdc820377966598e36d34ef650706318c1c77",
+                "reference": "be0cdc820377966598e36d34ef650706318c1c77",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/auth": "^12.0 || ^13.0",
+                "illuminate/database": "^12.0 || ^13.0",
+                "illuminate/http": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "laravel/sanctum": "^4.0 || ^5.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "nunomaduro/collision": "^8.6 || ^9.0",
+                "orchestra/testbench": "^10.0 || ^11.0",
+                "pestphp/pest": "^3.0",
+                "pestphp/pest-plugin-laravel": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "HasinHayder\\Tyro\\Providers\\TyroServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "1.5.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "HasinHayder\\Tyro\\": "src/"
+                },
+                "classmap": [
+                    "database/seeders",
+                    "database/factories"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Tyro - The ultimate Authentication, Authorization, and Role & Privilege Management solution for Laravel 12 & 13",
+            "keywords": [
+                "Authentication",
+                "acl",
+                "api",
+                "authorization",
+                "laravel",
+                "permissions",
+                "privileges",
+                "rbac",
+                "roles",
+                "sanctum"
+            ],
+            "support": {
+                "issues": "https://github.com/hasinhayder/tyro/issues",
+                "source": "https://github.com/hasinhayder/tyro/tree/v1.6.0"
+            },
+            "time": "2026-04-14T09:49:39+00:00"
         },
         {
             "name": "laravel/framework",
@@ -8095,5 +8167,5 @@
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
