@@ -4,7 +4,7 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Force dark mode behavior for Tailwind v4 when using .dark class */
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -13,7 +13,7 @@
 @source '../**/*.js';
 
 @layer base {
-    /* Ensure background is dark even if tailwind classes fail initially */
+    /* Ensure dark mode background */
     html.dark {
         background-color: #09090b; /* zinc-950 */
         color: #fafafa;
@@ -36,7 +36,7 @@
 }
 
 @layer components {
-    /* Standardized aesthetic components using built-in zinc palette */
+
     .glass-card {
         @apply bg-zinc-900/50 border border-zinc-800/50 rounded-2xl backdrop-blur-sm shadow-xl;
     }

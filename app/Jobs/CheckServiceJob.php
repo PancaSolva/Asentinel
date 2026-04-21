@@ -25,22 +25,16 @@ class CheckServiceJob implements ShouldQueue
     public $tries = 3;
     public $timeout = 10;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct($model)
     {
         $this->isService = $model instanceof Service;
 
-        // 🔥 pakai primary key yang benar
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
     }
 
-    /**
-     * Execute the job.
-     */
+   
     public function handle()
     {
         $model = $this->isService
@@ -55,7 +49,6 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
-        // 🔥 Get the URL to check
         $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -75,7 +68,6 @@ class CheckServiceJob implements ShouldQueue
 
             $time = (microtime(true) - $start) * 1000;
 
-            // ✅ update status UP
             $model->update([
                 'status' => 'UP',
                 'lastchecked' => now(),
@@ -83,7 +75,6 @@ class CheckServiceJob implements ShouldQueue
                 'last_status_code' => $response->status()
             ]);
 
-            // ✅ simpan log
             $log = LogMonitor::create([
                 'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
@@ -103,7 +94,6 @@ class CheckServiceJob implements ShouldQueue
                 'error' => $e->getMessage()
             ]);
 
-            // ❗ pastikan model masih ada sebelum update
             if ($model) {
                 $model->update([
                     'status' => 'DOWN',

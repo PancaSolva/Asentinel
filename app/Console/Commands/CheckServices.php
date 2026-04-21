@@ -16,13 +16,11 @@ class CheckServices extends Command
     public function handle()
     {
     
-        // cek semua service
         $services = Service::all();
         foreach ($services as $service) {
             CheckServiceJob::dispatch($service);
         }
 
-        // cek semua aplikasi (kalau ada)
         $apps = Aplikasi::all();
         foreach ($apps as $app) {
             CheckServiceJob::dispatch($app);

@@ -32,7 +32,7 @@ const LogDetailModal = ({ isOpen, onClose, log }) => {
             }
         >
             <div className="space-y-6">
-                {/* Status Header */}
+
                 <div className={`p-6 rounded-2xl flex items-center justify-between ${isSuccess ? 'bg-green-50' : 'bg-red-50'}`}>
                     <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl ${isSuccess ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
@@ -51,7 +51,7 @@ const LogDetailModal = ({ isOpen, onClose, log }) => {
                     </div>
                 </div>
 
-                {/* Target Info */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -71,7 +71,7 @@ const LogDetailModal = ({ isOpen, onClose, log }) => {
                     )}
                 </div>
 
-                {/* Performance & URL */}
+
                 <div className="space-y-4">
                     <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div className="flex items-center gap-2 mb-3">
@@ -113,7 +113,7 @@ const LogDetailModal = ({ isOpen, onClose, log }) => {
                     </div>
                 </div>
 
-                {/* Raw ID Info */}
+
                 <div className="flex items-center gap-2 text-[10px] text-gray-300 font-mono justify-center">
                     <Hash className="w-3 h-3" />
                     LOG_ID: {log.id_log_monitor}
