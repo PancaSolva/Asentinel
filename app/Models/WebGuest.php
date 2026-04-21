@@ -24,9 +24,4 @@ class WebGuest extends Model
     {
         return $this->belongsTo(Aplikasi::class, 'id_aplikasi');
     }
-
-    public function service()
-    {
-        return $this->belongsTo(Service::class, 'id_service');
-    }
 }

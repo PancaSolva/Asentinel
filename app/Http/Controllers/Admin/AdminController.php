@@ -36,11 +36,13 @@ class AdminController extends Controller
             return back()->withErrors(['email' => 'The provided credentials are incorrect.']);
         }
 
+        // Create a single auth token for both web and API use
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         // Web Login
         session(['admin_logged_in' => true, 'admin_user' => $user]);
 
         if ($request->expectsJson()) {
-            $token = $user->createToken('auth_token')->plainTextToken;
             return response()->json([
                 'success' => true,
                 'message' => 'Login successful',
@@ -49,8 +51,6 @@ class AdminController extends Controller
             ]);
         }
 
-        // Generate token for SPA even for web login
-        $token = $user->createToken('auth_token')->plainTextToken;
         session(['spa_token' => $token]);
 
         return redirect('/');

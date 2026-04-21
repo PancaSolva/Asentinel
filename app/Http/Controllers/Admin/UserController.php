@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -22,14 +23,15 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
-            'has_sandwich_bar' => 'boolean',
+            'role' => 'required|string|in:admin,user',
         ]);
 
-        User::create($request->all());
+        $validated['password'] = Hash::make($validated['password']);
+        User::create($validated);
 
         return Redirect::route('admin.users.index')->with('success', 'User created!');
     }
@@ -46,13 +48,13 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'has_sandwich_bar' => 'boolean',
+            'role' => 'required|string|in:admin,user',
         ]);
 
-        $user->update($request->all());
+        $user->update($validated);
 
         return Redirect::route('admin.users.index')->with('success', 'User updated!');
     }
@@ -63,4 +65,3 @@ class UserController extends Controller
         return Redirect::route('admin.users.index')->with('success', 'User deleted!');
     }
 }
-

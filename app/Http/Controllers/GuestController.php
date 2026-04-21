@@ -81,7 +81,7 @@ class GuestController extends Controller
 
     public function guestAccessList(): JsonResponse
     {
-        $guests = Cache::rememberForever('guest_list', function () {
+        $guests = Cache::remember('guest_list', 300, function () {
             return WebGuest::with(['user', 'aplikasi'])->get();
         });
 

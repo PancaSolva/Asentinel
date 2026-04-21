@@ -32,7 +32,7 @@ class CheckServiceJob implements ShouldQueue
     {
         $this->isService = $model instanceof Service;
 
-        // 🔥 pakai primary key yang benar
+        // Use the correct primary key for each model type
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
@@ -55,7 +55,6 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
-        // 🔥 Get the URL to check
         $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -75,7 +74,7 @@ class CheckServiceJob implements ShouldQueue
 
             $time = (microtime(true) - $start) * 1000;
 
-            // ✅ update status UP
+            // Update the model's status to UP
             $model->update([
                 'status' => 'UP',
                 'lastchecked' => now(),
@@ -83,7 +82,7 @@ class CheckServiceJob implements ShouldQueue
                 'last_status_code' => $response->status()
             ]);
 
-            // ✅ simpan log
+            // Create monitoring log entry
             $log = LogMonitor::create([
                 'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
@@ -103,14 +102,11 @@ class CheckServiceJob implements ShouldQueue
                 'error' => $e->getMessage()
             ]);
 
-            // ❗ pastikan model masih ada sebelum update
-            if ($model) {
-                $model->update([
-                    'status' => 'DOWN',
-                    'lastchecked' => now(),
-                    'last_status_code' => 0
-                ]);
-            }
+            $model->update([
+                'status' => 'DOWN',
+                'lastchecked' => now(),
+                'last_status_code' => 0
+            ]);
 
             $log = LogMonitor::create([
                 'id_aplikasi' => $model->id_aplikasi,

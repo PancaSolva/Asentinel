@@ -35,7 +35,6 @@ const Dashboard = () => {
 
         const channel = window.Echo.channel('monitoring')
             .listen('MonitoringUpdated', (e) => {
-                console.log('Monitoring update received:', e.log);
                 
                 // Track new log ID for animation
                 setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));

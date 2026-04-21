@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, AppWindow, Server, Activity, LogOut, User, ChevronDown, AlertTriangle, Users } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 import Modal from '../components/Modal';
 
 const Layout = () => {
@@ -14,13 +14,12 @@ const Layout = () => {
 
     const handleLogout = async () => {
         try {
-            await axios.post('/api/admin/logout');
+            await api.post('/logout');
         } catch (error) {
-            console.error('Logout error:', error);
+            // Silently handle - we're logging out anyway
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            delete axios.defaults.headers.common['Authorization'];
             navigate('/login');
         }
     };

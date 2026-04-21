@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api';
 import { Plus, Edit, Trash2, Eye, AppWindow, Globe, Search } from 'lucide-react';
@@ -91,10 +91,10 @@ const AplikasiIndex = () => {
         }
     };
 
-    const filteredData = aplikasi.filter(app => 
+    const filteredData = useMemo(() => aplikasi.filter(app => 
         (app.nama || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (app.tipe || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ), [aplikasi, searchTerm]);
 
     const columns = [
         { 

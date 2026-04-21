@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, Edit, Trash2, User, Mail, Shield, Search, Lock, Eye, EyeOff } from 'lucide-react';
+import api from '../../api';
+import { Plus, Edit, Trash2, User, Mail, Shield, Search, Lock } from 'lucide-react';
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
 
@@ -10,7 +10,6 @@ const UserIndex = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [showPasswords, setShowPasswords] = useState({});
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -25,7 +24,7 @@ const UserIndex = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/api/admin/users');
+            const res = await api.get('/users');
             setUsers(res.data.data);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -38,9 +37,9 @@ const UserIndex = () => {
         e.preventDefault();
         try {
             if (editingUser) {
-                await axios.put(`/api/admin/users/${editingUser.id}`, formData);
+                await api.put(`/users/${editingUser.id}`, formData);
             } else {
-                await axios.post('/api/admin/users', formData);
+                await api.post('/users', formData);
             }
             setShowModal(false);
             setEditingUser(null);
@@ -75,7 +74,7 @@ const UserIndex = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this user?')) {
             try {
-                await axios.delete(`/api/admin/users/${id}`);
+                await api.delete(`/users/${id}`);
                 fetchUsers();
             } catch (error) {
                 console.error('Error deleting user:', error);
@@ -83,12 +82,6 @@ const UserIndex = () => {
         }
     };
 
-    const togglePasswordVisibility = (userId) => {
-        setShowPasswords(prev => ({
-            ...prev,
-            [userId]: !prev[userId]
-        }));
-    };
 
     const filteredData = users.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,22 +116,6 @@ const UserIndex = () => {
                     }`}>
                         {row.role}
                     </span>
-                </div>
-            )
-        },
-        { 
-            header: 'Password', 
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <div className="font-mono text-sm bg-gray-50 px-2 py-1 rounded border border-gray-100 min-w-[120px]">
-                        {showPasswords[row.id] ? (row.password_plain || '********') : '••••••••'}
-                    </div>
-                    <button 
-                        onClick={() => togglePasswordVisibility(row.id)}
-                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                        {showPasswords[row.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                 </div>
             )
         },
