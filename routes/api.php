@@ -31,12 +31,6 @@ Route::get('monitoring-logs', [MonitoringController::class, 'monitoringLogs']);
     Route::get('guest-list', [GuestController::class, 'guestAccessList']);
 
     });
-    
-    // Guest access routes
-    Route::post('add-guest', [GuestController::class, 'addGuestAccess']);
-    Route::delete('remove-guest', [GuestController::class, 'removeGuestAccess']);
-    Route::get('guest-list', [GuestController::class, 'guestAccessList']);
-
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');

@@ -6,6 +6,7 @@ use App\Models\WebGuest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class GuestController extends Controller
 {
@@ -19,27 +20,26 @@ class GuestController extends Controller
 
         $validated = $request->validate([
             'id' => 'required|exists:users,id',
-            'id_aplikasi' => 'required|exists:aplikasi,id',
+            'id_aplikasi' => 'required|exists:aplikasi,id_aplikasi',
         ]);
 
         Log::info('Guest add request', $validated);
 
-        $exists = WebGuest::where('id', $validated['id'])
-            ->where('id_aplikasi', $validated['id_aplikasi'])
-            ->exists();
-
-        if ($exists) {
-            return response()->json(['error' => 'Guest access already exists'], 409);
-        }
-
         try {
-            $guest = \DB::transaction(function () use ($validated) {
-                $guest = WebGuest::create($validated);
-                return $guest->load(['user', 'aplikasi']);
-            });
+            $guest = WebGuest::firstOrCreate(
+                ['id' => $validated['id'], 'id_aplikasi' => $validated['id_aplikasi']]
+            );
+
+            if (!$guest->wasRecentlyCreated) {
+                return response()->json(['error' => 'Guest access already exists'], 409);
+            }
+
+            $guest->load(['user', 'aplikasi']);
 
             Log::info('Guest created successfully', ['premission_id' => $guest->premission_id]);
             
+            Cache::forget('guest_list');
+
             return response()->json([
                 'success' => true,
                 'data' => $guest
@@ -60,7 +60,7 @@ class GuestController extends Controller
     {
         $validated = $request->validate([
             'id' => 'required|exists:users,id',
-            'id_aplikasi' => 'required|exists:aplikasi,id',
+            'id_aplikasi' => 'required|exists:aplikasi,id_aplikasi',
         ]);
 
         $deleted = WebGuest::where('id', $validated['id'])
@@ -71,6 +71,8 @@ class GuestController extends Controller
             return response()->json(['error' => 'Record not found'], 404);
         }
 
+        Cache::forget('guest_list');
+
         return response()->json([
             'success' => true,
             'message' => 'Guest access removed successfully'
@@ -79,8 +81,9 @@ class GuestController extends Controller
 
     public function guestAccessList(): JsonResponse
     {
-        
-        $guests = WebGuest::with(['user', 'aplikasi'])->get();
+        $guests = Cache::rememberForever('guest_list', function () {
+            return WebGuest::with(['user', 'aplikasi'])->get();
+        });
 
         return response()->json($guests);
     }
