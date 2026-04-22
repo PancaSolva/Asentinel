@@ -75,7 +75,7 @@ services:
     ports:
       - "9000:9000"
     env_file:
-      - ./webhook/.env
+      - ./webhook/.env.example
     depends_on:
       app:
         condition: service_healthy
