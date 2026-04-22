@@ -69,6 +69,25 @@ services:
     networks:
       - asentinel
 
+  webhook:
+    build: ./webhook
+    container_name: asentinel-webhook
+    ports:
+      - "9000:9000"
+    env_file:
+      - ./webhook/.env
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - asentinel
+
 networks:
   asentinel:
     driver: bridge

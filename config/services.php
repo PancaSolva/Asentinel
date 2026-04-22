@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Asentinel Webhook Microservice
+    |--------------------------------------------------------------------------
+    |
+    | URL and shared secret for the FastAPI webhook notification service.
+    | The CheckServiceJob sends monitoring events here for Telegram dispatch.
+    |
+    */
+
+    'webhook' => [
+        'url' => env('WEBHOOK_URL', 'http://localhost:9000'),
+        'secret' => env('WEBHOOK_SECRET', ''),
+    ],
+
 ];
