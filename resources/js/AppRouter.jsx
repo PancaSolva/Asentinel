@@ -5,7 +5,8 @@ import Dashboard from './pages/Dashboard';
 import AplikasiIndex from './pages/Aplikasi/Index';
 import AplikasiDetail from './pages/Aplikasi/Detail';
 import ServiceIndex from './pages/Services/Index';
-import Login from './pages/Login';
+import UserIndex from './pages/Users/Index';
+import Login from './pages/Login2';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AppRouter = () => {
@@ -22,6 +23,7 @@ const AppRouter = () => {
                         <Route path="aplikasi" element={<AplikasiIndex />} />
                         <Route path="aplikasi/:id" element={<AplikasiDetail />} />
                         <Route path="services" element={<ServiceIndex />} />
+                        <Route path="users" element={<UserIndex />} />
                     </Route>
                 </Route>
                 

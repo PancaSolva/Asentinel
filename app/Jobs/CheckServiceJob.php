@@ -98,6 +98,7 @@ class CheckServiceJob implements ShouldQueue
                     'checked_at' => now()
                 ]);
 
+                $log->load(['aplikasi', 'service']);
                 broadcast(new MonitoringUpdated($log));
 
                 // 🔔 Kirim webhook notifikasi UP (recovery)
@@ -133,6 +134,7 @@ class CheckServiceJob implements ShouldQueue
                     'detected_at' => now(),
                 ]);
 
+                $log->load(['aplikasi', 'service']);
                 broadcast(new MonitoringUpdated($log));
 
                 // 🔔 Kirim webhook notifikasi DOWN
@@ -166,6 +168,8 @@ class CheckServiceJob implements ShouldQueue
                 'http_status_code' => 0,
                 'checked_at' => now()
             ]);
+
+            $log->load(['aplikasi', 'service']);
 
             LogAnomali::create([
                 'id_aplikasi' => $model->id_aplikasi,

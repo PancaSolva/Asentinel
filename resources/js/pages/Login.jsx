@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, AlertCircle, Loader2, Share2, FileText, Link as LinkIcon, BarChart3, Globe } from 'lucide-react';
 
@@ -26,12 +26,12 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('/api/admin/login', { email, password });
+            // Note: Login uses the base axios or a slightly different path if it's not under /api/admin
+            const response = await api.post('/login', { email, password });
             
             if (response.data.success) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
-                axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
                 
                 // Redirect to the page they were trying to access, or dashboard
                 const from = location.state?.from?.pathname || "/";

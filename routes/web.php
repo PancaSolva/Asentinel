@@ -20,7 +20,7 @@ Route::prefix('api')->group(function () {
     Route::delete('/pin/{id}', [PinApiController::class, 'destroy']);
 });
 
-Route::get('/login', [AdminController::class, 'showLogin'])->name('login'); //ambil data dg alamat login
+// Route::get('/login', [AdminController::class, 'showLogin'])->name('login'); // Commented out to let React handle it
 Route::post('/login', [AdminController::class, 'login']);
 Route::get('/logout', [AdminController::class, 'logout'])->name('logout'); 
 
@@ -50,4 +50,4 @@ Route::middleware([AdminMiddleware::class])->prefix('admin')->name('admin.')->gr
 // Kecuali rute API yang sudah didefinisikan di atas
 Route::get('/{any}', function () {
     return view('welcome');
-})->where('any', '^(?!admin|api|login|logout|health|sanctum|storage).*$');
+})->where('any', '^(?!admin|api|logout|health|sanctum|storage).*$'); // Removed login from excluded list

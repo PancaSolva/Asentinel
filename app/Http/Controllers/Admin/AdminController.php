@@ -27,33 +27,61 @@ class AdminController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'The provided credentials are incorrect.'
-            ], 401);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The provided credentials are incorrect.'
+                ], 401);
+            }
+            return back()->withErrors(['email' => 'The provided credentials are incorrect.']);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Web Login
+        session(['admin_logged_in' => true, 'admin_user' => $user]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token
-        ]);
+        if ($request->expectsJson()) {
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'user' => $user,
+                'token' => $token
+            ]);
+        }
+
+        // Generate token for SPA even for web login
+        $token = $user->createToken('auth_token')->plainTextToken;
+        session(['spa_token' => $token]);
+
+        return redirect('/');
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        if ($request->expectsJson()) {
+            $user = $request->user();
+            if ($user && $user->currentAccessToken()) {
+                $user->currentAccessToken()->delete();
+            }
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Logged out successfully'
-        ]);
+        session()->forget(['admin_logged_in', 'admin_user']);
+        Auth::logout();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged out successfully'
+            ]);
+        }
+
+        return redirect('/login');
     }
     public function ShowLogin()
     {
+        if (session('admin_logged_in') || Auth::check()) {
+            return redirect('/');
+        }
         return view('admin.login');
     }
 }

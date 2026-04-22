@@ -42,6 +42,7 @@ class UserController extends Controller
         }
 
         $data = $validator->validated();
+        $data['password_plain'] = $data['password'];
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
@@ -83,6 +84,7 @@ class UserController extends Controller
 
         $data = $validator->validated();
         if (isset($data['password'])) {
+            $data['password_plain'] = $data['password'];
             $data['password'] = Hash::make($data['password']);
         }
 
