@@ -17,16 +17,18 @@ class CheckServices extends Command
     {
     
         // cek semua service
-        $services = Service::all();
-        foreach ($services as $service) {
-            CheckServiceJob::dispatch($service);
-        }
+        Service::chunk(100, function ($services) {
+            foreach ($services as $service) {
+                CheckServiceJob::dispatch($service);
+            }
+        });
 
         // cek semua aplikasi (kalau ada)
-        $apps = Aplikasi::all();
-        foreach ($apps as $app) {
-            CheckServiceJob::dispatch($app);
-        }
+        Aplikasi::chunk(100, function ($apps) {
+            foreach ($apps as $app) {
+                CheckServiceJob::dispatch($app);
+            }
+        });
 
         $this->info('All services dispatched!');
     }

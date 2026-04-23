@@ -94,14 +94,16 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
-            $log->load(['aplikasi', 'service']);
-            broadcast(new MonitoringUpdated($log));
+$log->load(['aplikasi', 'service']);
+            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
 
         } catch (\Exception $e) {
             Log::error("Service DOWN", [
                 'url' => $url,
                 'error' => $e->getMessage()
             ]);
+
+            $wasDown = $model && $model->status === 'DOWN';
 
             // ❗ pastikan model masih ada sebelum update
             if ($model) {
@@ -121,17 +123,19 @@ class CheckServiceJob implements ShouldQueue
                 'checked_at' => now()
             ]);
 
-            $log->load(['aplikasi', 'service']);
+$log->load(['aplikasi', 'service']);
 
-            LogAnomali::create([
-                'id_aplikasi' => $model->id_aplikasi,
-                'id_service' => $this->isService ? $model->id_service : null,
-                'description' => "Endpoint {$url} is DOWN",
-                'severity' => 'high',
-                'detected_at' => now(),
-            ]);
+            if (!$wasDown) {
+                LogAnomali::create([
+                    'id_aplikasi' => $model->id_aplikasi,
+                    'id_service' => $this->isService ? $model->id_service : null,
+                    'description' => "Endpoint {$url} is DOWN",
+                    'severity' => 'high',
+                    'detected_at' => now(),
+                ]);
+            }
 
-            broadcast(new MonitoringUpdated($log));
+            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
         }
     }
 }
