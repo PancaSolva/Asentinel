@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
@@ -101,12 +101,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/admin/login', { email, password });
+      const response = await api.post('/login', { email, password });
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
@@ -123,7 +122,7 @@ export default function Login() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
 
         body {
           font-family: 'Nunito', sans-serif;

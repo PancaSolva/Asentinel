@@ -1,6 +1,5 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import axios from 'axios';
 
 
 const ProtectedRoute = () => {
@@ -8,10 +7,9 @@ const ProtectedRoute = () => {
     const location = useLocation();
 
     if (!token) {
+        // Redirect to login, preserving the intended destination
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
-
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     return <Outlet />;
 };

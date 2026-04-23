@@ -82,3 +82,196 @@ To access these endpoints, the user must be logged in as an admin. The API uses 
   - `PUT /{id}` : Update pin
   - `DELETE /{id}` : Delete pin
 
+## 6. Guest Access Management
+
+Manage guest-level permissions that grant a user read-only/viewer access to a specific **Aplikasi**.  
+All routes sit inside the `api/admin` prefix and require **Sanctum authentication**.
+
+- **Base URL**: `/api/admin`
+- **Authentication**: Bearer token (Sanctum) — include `Authorization: Bearer <token>` header
+- **Required Header**: `Accept: application/json`
+
+---
+
+### 6.1 List All Guest Access
+
+Retrieve every guest-access record. Results are cached until the cache is invalidated by an add or remove operation.
+
+```
+GET /api/admin/guest-list
+```
+
+**Parameters**: None
+
+**Success Response** (`200 OK`):
+```json
+[
+  {
+    "premission_id": 1,
+    "id": 2,
+    "id_aplikasi": 1,
+    "user": {
+      "id": 2,
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    "aplikasi": {
+      "id_aplikasi": 1,
+      "nama": "My App",
+      "deskripsi": "Application description",
+      "tipe": "web",
+      "status": "up"
+    }
+  }
+]
+```
+
+**Error Responses**:
+| Status | Body | Reason |
+|--------|------|--------|
+| `401`  | `{"message": "Unauthenticated."}` | Missing or invalid Sanctum token |
+
+---
+
+### 6.2 Add Guest Access
+
+Grant a user guest access to a specific Aplikasi. Uses `firstOrCreate` — if the exact combination already exists, a `409` is returned instead of a duplicate.
+
+```
+POST /api/admin/add-guest
+```
+
+**Body Parameters** (JSON):
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `id` | integer | ✅ | Must exist in `users` table |
+| `id_aplikasi` | integer | ✅ | Must exist in `aplikasi` table |
+
+**Request Example**:
+```json
+{
+  "id": 2,
+  "id_aplikasi": 1
+}
+```
+
+**Success Response** (`200 OK`):
+```json
+{
+  "success": true,
+  "data": {
+    "premission_id": 5,
+    "id": 2,
+    "id_aplikasi": 1,
+    "user": {
+      "id": 2,
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    "aplikasi": {
+      "id_aplikasi": 1,
+      "nama": "My App"
+    }
+  }
+}
+```
+
+**Error Responses**:
+| Status | Body | Reason |
+|--------|------|--------|
+| `401`  | `{"error": "Unauthorized"}` | Missing or invalid Sanctum token |
+| `409`  | `{"error": "Guest access already exists"}` | The user already has access to this Aplikasi |
+| `422`  | `{"errors": {"id": ["The id field is required."]}}` | Validation failure |
+| `500`  | `{"error": "Database error"}` or `{"error": "Failed to create guest"}` | Server-side error |
+
+---
+
+### 6.3 Remove Guest Access
+
+Revoke a user's guest access to a specific Aplikasi. The matching record is deleted from the `web_guests` table.
+
+```
+DELETE /api/admin/remove-guest
+```
+
+**Body Parameters** (JSON):
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `id` | integer | ✅ | Must exist in `users` table |
+| `id_aplikasi` | integer | ✅ | Must exist in `aplikasi` table |
+
+**Request Example**:
+```json
+{
+  "id": 2,
+  "id_aplikasi": 1
+}
+```
+
+**Success Response** (`200 OK`):
+```json
+{
+  "success": true,
+  "message": "Guest access removed successfully"
+}
+```
+
+**Error Responses**:
+| Status | Body | Reason |
+|--------|------|--------|
+| `401`  | `{"message": "Unauthenticated."}` | Missing or invalid Sanctum token |
+| `404`  | `{"error": "Record not found"}` | No matching guest-access record exists |
+| `422`  | `{"errors": {"id_aplikasi": [...]}}` | Validation failure |
+
+---
+
+### Caching Behaviour
+
+- **`guest-list`** results are cached indefinitely (`Cache::rememberForever`).
+- The cache key `guest_list` is automatically **invalidated** whenever `add-guest` or `remove-guest` completes successfully.
+
+---
+
+### Example Usage (curl)
+
+```bash
+# 1. Login to obtain a Sanctum token
+TOKEN="your-sanctum-token"
+
+# 2. List all guest access records
+curl -s -X GET "http://127.0.0.1:8010/api/admin/guest-list" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
+
+# 3. Grant user (id=2) guest access to Aplikasi (id_aplikasi=1)
+curl -s -X POST "http://127.0.0.1:8010/api/admin/add-guest" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"id": 2, "id_aplikasi": 1}'
+
+# 4. Revoke that access
+curl -s -X DELETE "http://127.0.0.1:8010/api/admin/remove-guest" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"id": 2, "id_aplikasi": 1}'
+```
+
+---
+
+### Database Schema (`web_guests`)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `premission_id` | bigint (PK, auto-increment) | Primary key |
+| `id` | bigint (FK → `users.id`) | The user receiving guest access. Cascades on delete. |
+| `id_aplikasi` | bigint (FK → `aplikasi.id_aplikasi`) | The application the user is granted access to. Cascades on delete. |
+
+### Related Models
+
+- **`WebGuest`** — `App\Models\WebGuest` (table: `web_guests`)
+  - `belongsTo` → `User` (via `id`)
+  - `belongsTo` → `Aplikasi` (via `id_aplikasi`)
+- **`GuestController`** — `App\Http\Controllers\GuestController`
+

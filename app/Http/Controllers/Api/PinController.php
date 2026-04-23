@@ -7,7 +7,7 @@ use App\Models\Pin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class api extends Controller
+class PinController extends Controller
 {
     /**
      * Display a listing of pins.

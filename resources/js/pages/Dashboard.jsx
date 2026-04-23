@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { 
-    Activity, 
-    AppWindow, 
-    Server, 
-    AlertCircle, 
-    CheckCircle, 
-    Clock, 
-    TrendingUp, 
-    RefreshCcw,
-    LayoutDashboard,
-    Eye
+    Activity, AppWindow, Server, AlertCircle, CheckCircle, 
+    Clock, TrendingUp, RefreshCcw, LayoutDashboard, Eye
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import Table from '../components/Table';
@@ -18,10 +10,7 @@ import LogDetailModal from '../components/LogDetailModal';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
-        totalAplikasi: 0,
-        totalServices: 0,
-        totalUp: 0,
-        totalDown: 0,
+        totalAplikasi: 0, totalServices: 0, totalUp: 0, totalDown: 0,
     });
     const [monitoringData, setMonitoringData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,40 +18,10 @@ const Dashboard = () => {
     const [selectedLog, setSelectedLog] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
-
     useEffect(() => {
         fetchDashboardData();
-
-        const channel = window.Echo.channel('monitoring')
-            .listen('MonitoringUpdated', (e) => {
-
-                
-                setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));
-
-                setMonitoringData(prevData => {
-                    if (prevData.some(log => log.id_log_monitor === e.log.id_log_monitor)) {
-                        return prevData;
-                    }
-                    return [e.log, ...prevData].slice(0, 10);
-                });
-
-                fetchDashboardData(false);
-
-                setTimeout(() => {
-                    setNewLogIds(prev => {
-                        const next = new Set(prev);
-                        next.delete(e.log.id_log_monitor);
-                        return next;
-                    });
-                }, 3000);
-            });
-
-        return () => {
-            channel.stopListening('MonitoringUpdated');
-        };
         const intervalId = setInterval(() => fetchDashboardData(false), 20000);
         return () => clearInterval(intervalId);
-
     }, []);
 
     const fetchDashboardData = async (showLoading = true) => {
@@ -75,7 +34,6 @@ const Dashboard = () => {
             setStats(statsRes.data.data);
             setMonitoringData(monitorRes.data.data);
         } catch (error) {
-
         } finally {
             if (showLoading) setLoading(false);
         }
@@ -87,7 +45,6 @@ const Dashboard = () => {
             await api.post('/run-monitoring');
             await fetchDashboardData(false);
         } catch (error) {
-
         } finally {
             setChecking(false);
         }
@@ -128,10 +85,7 @@ const Dashboard = () => {
                 </code>
             )
         },
-        { 
-            header: 'Status', 
-            render: (row) => <StatusBadge status={row.status} /> 
-        },
+        { header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
         { 
             header: 'Code', 
             render: (row) => (
@@ -164,7 +118,7 @@ const Dashboard = () => {
             render: (row) => (
                 <button 
                     onClick={() => handleLogClick(row)}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all group-hover:translate-x-[-4px]"
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                 >
                     <Eye className="w-5 h-5" />
                 </button>
@@ -174,7 +128,6 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-8">
-
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight flex items-center gap-3">
@@ -199,7 +152,6 @@ const Dashboard = () => {
                 </div>
             </div>
 
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsCards.map((stat, idx) => (
                     <div key={idx} className={`bg-white p-6 rounded-2xl shadow-sm border ${stat.border} flex items-center gap-5 transition-transform hover:scale-[1.02]`}>
@@ -214,7 +166,6 @@ const Dashboard = () => {
                 ))}
             </div>
 
-
             <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-white to-gray-50/50">
                     <div className="flex items-center gap-3">
@@ -226,7 +177,6 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         Auto Refresh
-
                     </div>
                 </div>
                 <Table 
@@ -235,10 +185,8 @@ const Dashboard = () => {
                     loading={loading}
                     emptyMessage="Infrastructure looks quiet. No monitoring data available."
                     rowClassName=""
-
                 />
             </div>
-
 
             <LogDetailModal 
                 isOpen={showDetailModal}
