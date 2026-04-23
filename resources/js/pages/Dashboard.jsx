@@ -28,42 +28,14 @@ const Dashboard = () => {
     const [checking, setChecking] = useState(false);
     const [selectedLog, setSelectedLog] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [newLogIds, setNewLogIds] = useState(new Set());
+
 
     useEffect(() => {
         fetchDashboardData();
 
-        const channel = window.Echo.channel('monitoring')
-            .listen('MonitoringUpdated', (e) => {
-                console.log('Monitoring update received:', e.log);
-                
-                // Track new log ID for animation
-                setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));
+        const intervalId = setInterval(() => fetchDashboardData(false), 20000);
+        return () => clearInterval(intervalId);
 
-                // Update monitoring data smoothly by prepending the new log locally first
-                setMonitoringData(prevData => {
-                    if (prevData.some(log => log.id_log_monitor === e.log.id_log_monitor)) {
-                        return prevData;
-                    }
-                    return [e.log, ...prevData].slice(0, 10);
-                });
-
-                // Then fetch everything in background to update stats and ensure data consistency
-                fetchDashboardData(false);
-
-                // Remove the "new" highlight after some time
-                setTimeout(() => {
-                    setNewLogIds(prev => {
-                        const next = new Set(prev);
-                        next.delete(e.log.id_log_monitor);
-                        return next;
-                    });
-                }, 3000);
-            });
-
-        return () => {
-            channel.stopListening('MonitoringUpdated');
-        };
     }, []);
 
     const fetchDashboardData = async (showLoading = true) => {
@@ -227,7 +199,8 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        Live Updates
+                        Auto Refresh
+
                     </div>
                 </div>
                 <Table 
@@ -235,11 +208,8 @@ const Dashboard = () => {
                     data={monitoringData}
                     loading={loading}
                     emptyMessage="Infrastructure looks quiet. No monitoring data available."
-                    rowClassName={(row) => 
-                        newLogIds.has(row.id_log_monitor) 
-                        ? 'bg-blue-50/50 animate-in fade-in slide-in-from-top-2 duration-1000' 
-                        : ''
-                    }
+                    rowClassName=""
+
                 />
             </div>
 
