@@ -10,16 +10,26 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id('id_service');
-            $table->foreignId('id_aplikasi')->constrained('aplikasi', 'id_aplikasi')->onDelete('cascade');
+
+            // Foreign key to aplikasi table
+            $table->foreignId('id_aplikasi')
+                ->constrained('aplikasi', 'id_aplikasi')
+                ->onDelete('cascade');
+
+            // Service details
             $table->string('nama');
             $table->string('type_service')->nullable();
             $table->string('ip_local')->nullable();
             $table->string('url_service')->nullable();
             $table->string('url_repository')->nullable();
             $table->string('url_api_docs')->nullable();
+
+            // Status info
             $table->string('status')->default('UP');
             $table->timestamp('lastchecked')->nullable();
-            $table->timestamps('created_at', 'updated_at');
+
+            // Laravel timestamps (correct way)
+            $table->timestamps();
         });
     }
 
