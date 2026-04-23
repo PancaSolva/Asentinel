@@ -31,7 +31,7 @@ const AplikasiIndex = () => {
             const res = await api.get('/aplikasi');
             setAplikasi(res.data.data);
         } catch (error) {
-            console.error('Error fetching aplikasi:', error);
+
         } finally {
             setLoading(false);
         }
@@ -50,7 +50,7 @@ const AplikasiIndex = () => {
             resetForm();
             fetchAplikasi();
         } catch (error) {
-            console.error('Error saving aplikasi:', error);
+
         }
     };
 
@@ -86,7 +86,7 @@ const AplikasiIndex = () => {
                 await api.delete(`/aplikasi/${id}`);
                 fetchAplikasi();
             } catch (error) {
-                console.error('Error deleting aplikasi:', error);
+
             }
         }
     };

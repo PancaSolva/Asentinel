@@ -25,22 +25,16 @@ class CheckServiceJob implements ShouldQueue
     public $tries = 3;
     public $timeout = 10;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct($model)
     {
         $this->isService = $model instanceof Service;
 
-        // 🔥 pakai primary key yang benar
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
     }
 
-    /**
-     * Execute the job.
-     */
+   
     public function handle()
     {
         $model = $this->isService
@@ -55,7 +49,6 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
-        // 🔥 Get the URL to check
         $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -75,6 +68,22 @@ class CheckServiceJob implements ShouldQueue
 
             $time = (microtime(true) - $start) * 1000;
 
+            $model->update([
+                'status' => 'UP',
+                'lastchecked' => now(),
+                'last_response_time' => (int) $time,
+                'last_status_code' => $response->status()
+            ]);
+
+            $log = LogMonitor::create([
+                'id_aplikasi' => $model->id_aplikasi,
+                'id_service' => $this->isService ? $model->id_service : null,
+                'url' => $url,
+                'status' => 'UP',
+                'http_status_code' => $response->status(),
+                'response_time_ms' => (int) $time,
+                'checked_at' => now()
+            ]);
             $httpStatus = $response->status();
 
             // Check if status code is in 2xx range

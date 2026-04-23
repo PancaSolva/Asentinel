@@ -19,12 +19,7 @@ class MonitoringController extends Controller
         $totalAplikasi = Aplikasi::count();
         $totalServices = Service::count();
         
-        \Illuminate\Support\Facades\Log::debug("Dashboard stats requested", [
-            'totalAplikasi' => $totalAplikasi,
-            'totalServices' => $totalServices,
-            'db' => config('database.default'),
-        ]);
-        // Simplified latest status logic
+
         $latestLogs = LogMonitor::orderBy('checked_at', 'desc')->get()->unique(function($item) {
             return ($item->id_aplikasi ?? '0') . '-' . ($item->id_service ?? '0');
         });

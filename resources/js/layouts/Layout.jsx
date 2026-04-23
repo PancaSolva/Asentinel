@@ -16,7 +16,7 @@ const Layout = () => {
         try {
             await axios.post('/api/admin/logout');
         } catch (error) {
-            console.error('Logout error:', error);
+
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -41,7 +41,7 @@ const Layout = () => {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar */}
+
             <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
                 <div className="p-6 border-b border-gray-100 flex items-center gap-2">
                     <Activity className="w-8 h-8 text-blue-600" />
@@ -65,7 +65,7 @@ const Layout = () => {
                 </nav>
             </aside>
 
-            {/* Main Content */}
+
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
                     <h1 className="text-lg font-semibold text-gray-800">
@@ -86,7 +86,7 @@ const Layout = () => {
                             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`} />
                         </div>
 
-                        {/* Dropdown Menu */}
+
                         {showProfileDropdown && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setShowProfileDropdown(false)}></div>
@@ -119,7 +119,7 @@ const Layout = () => {
                 </div>
             </main>
 
-            {/* Logout Confirmation Modal */}
+
             <Modal
                 isOpen={showLogoutConfirm}
                 onClose={() => setShowLogoutConfirmation(false)}

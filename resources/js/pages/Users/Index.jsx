@@ -28,7 +28,7 @@ const UserIndex = () => {
             const res = await axios.get('/api/admin/users');
             setUsers(res.data.data);
         } catch (error) {
-            console.error('Error fetching users:', error);
+
         } finally {
             setLoading(false);
         }
@@ -47,7 +47,7 @@ const UserIndex = () => {
             resetForm();
             fetchUsers();
         } catch (error) {
-            console.error('Error saving user:', error);
+
             alert(error.response?.data?.message || 'Error saving user');
         }
     };
@@ -66,7 +66,7 @@ const UserIndex = () => {
         setFormData({
             name: user.name,
             email: user.email,
-            password: '', // Keep empty for editing unless changed
+            password: '',
             role: user.role || 'user',
         });
         setShowModal(true);
@@ -78,7 +78,7 @@ const UserIndex = () => {
                 await axios.delete(`/api/admin/users/${id}`);
                 fetchUsers();
             } catch (error) {
-                console.error('Error deleting user:', error);
+
             }
         }
     };

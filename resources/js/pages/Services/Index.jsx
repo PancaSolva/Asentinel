@@ -32,7 +32,7 @@ const ServiceIndex = () => {
             const res = await api.get('/services');
             setServices(res.data.data);
         } catch (error) {
-            console.error('Error fetching services:', error);
+
         } finally {
             setLoading(false);
         }
@@ -43,7 +43,7 @@ const ServiceIndex = () => {
             const res = await api.get('/aplikasi');
             setAplikasis(res.data.data.filter(app => app.tipe === 'microservice'));
         } catch (error) {
-            console.error('Error fetching aplikasis:', error);
+
         }
     };
 
@@ -60,7 +60,7 @@ const ServiceIndex = () => {
             resetForm();
             fetchServices();
         } catch (error) {
-            console.error('Error saving service:', error);
+
         }
     };
 
@@ -96,7 +96,7 @@ const ServiceIndex = () => {
                 await api.delete(`/services/${id}`);
                 fetchServices();
             } catch (error) {
-                console.error('Error deleting service:', error);
+
             }
         }
     };

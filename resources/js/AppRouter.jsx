@@ -13,10 +13,10 @@ const AppRouter = () => {
     return (
         <Router>
             <Routes>
-                {/* Public Route */}
+
                 <Route path="/login" element={<Login />} />
                 
-                {/* Protected Routes */}
+
                 <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<Layout />}>
                         <Route index element={<Dashboard />} />
@@ -27,7 +27,7 @@ const AppRouter = () => {
                     </Route>
                 </Route>
                 
-                {/* Final Fallback */}
+
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </Router>

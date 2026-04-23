@@ -16,6 +16,15 @@ class CheckServices extends Command
     public function handle()
     {
     
+        $services = Service::all();
+        foreach ($services as $service) {
+            CheckServiceJob::dispatch($service);
+        }
+
+        $apps = Aplikasi::all();
+        foreach ($apps as $app) {
+            CheckServiceJob::dispatch($app);
+        }
         // cek semua service
         Service::chunk(100, function ($services) {
             foreach ($services as $service) {

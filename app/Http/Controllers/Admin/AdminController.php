@@ -36,7 +36,7 @@ class AdminController extends Controller
             return back()->withErrors(['email' => 'The provided credentials are incorrect.']);
         }
 
-        // Web Login
+
         session(['admin_logged_in' => true, 'admin_user' => $user]);
 
         if ($request->expectsJson()) {
@@ -49,7 +49,7 @@ class AdminController extends Controller
             ]);
         }
 
-        // Generate token for SPA even for web login
+
         $token = $user->createToken('auth_token')->plainTextToken;
         session(['spa_token' => $token]);
 

@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
-// ── SVG Logos ──────────────────────────────────────────────────────────────────
 
 const KominfoLogo = () => (
   <img 
@@ -38,7 +37,7 @@ const ApiNodeIcon = () => (
   </svg>
 );
 
-// ── Floating orbit icons ────────────────────────────────────────────────────────
+
 const GlobeIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1.8"/>
@@ -70,7 +69,7 @@ const ChartIcon = () => (
   </svg>
 );
 
-// ── Main Component ──────────────────────────────────────────────────────────────
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -85,17 +84,13 @@ export default function Login() {
   const location = useLocation();
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem('token');
     if (token) {
       navigate('/', { replace: true });
     }
 
-    // Phase 1: splash visible + fade-in
     const t1 = setTimeout(() => setMounted(true), 50);
-    // Phase 2: splash fades out
     const t2 = setTimeout(() => setSplashDone(true), 1800);
-    // Phase 3: remove splash from DOM
     const t3 = setTimeout(() => setShowSplash(false), 2400);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [navigate]);
@@ -113,7 +108,6 @@ export default function Login() {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
-        // Redirect to the page they were trying to access, or dashboard
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
       }
@@ -138,7 +132,7 @@ export default function Login() {
           overflow: hidden;
         }
 
-        /* ── Splash ── */
+
         .splash {
           position: fixed; inset: 0; z-index: 999;
           display: flex; align-items: center; justify-content: center;
@@ -153,7 +147,7 @@ export default function Login() {
         }
         .splash-inner.show { opacity: 1; transform: scale(1); }
 
-        /* ── Background ── */
+
         .bg {
           position: fixed; inset: 0;
           background-image: url('/images/bg-login.svg');
@@ -165,7 +159,7 @@ export default function Login() {
         }
         .bg-blob {
           position: absolute; border-radius: 50%;
-          filter: blur(80px); /* Tambahin blur biar nyatu sama SVG */
+          filter: blur(80px);
           z-index: 0;
         }
         .blob1 {
@@ -180,7 +174,7 @@ export default function Login() {
           width: 40vw; height: 40vw; bottom: -15%; right: -5%;
           background: radial-gradient(circle at 60% 70%, #0ea5e955, #1338be00 70%);
         }
-        /* Curved wave shapes matching reference */
+
         .wave {
           position: absolute;
           border-radius: 50%;
@@ -189,7 +183,7 @@ export default function Login() {
         .wave1 { width: 70vw; height: 70vw; top: -25%; left: -15%; }
         .wave2 { width: 55vw; height: 55vw; top: -20%; left: -10%; }
 
-        /* ── Page wrapper ── */
+
         .page {
           position: relative; z-index: 1;
           min-height: 100vh;
@@ -199,7 +193,7 @@ export default function Login() {
         }
         .page.visible { opacity: 1; transform: translateY(0); }
 
-        /* ── Top bar ── */
+
         .topbar {
           display: flex; justify-content: space-between; align-items: flex-start;
           padding: 24px 32px 0;
@@ -229,14 +223,14 @@ export default function Login() {
           line-height: 1.35; text-align: left;
         }
 
-        /* ── Center area ── */
+
         .center {
           flex: 1; display: flex; align-items: center; justify-content: center;
           padding: 20px;
           position: relative;
         }
 
-        /* ── Orbit ring ── */
+
         .orbit-wrap {
           position: absolute;
           left: calc(50% - 380px);
@@ -278,13 +272,13 @@ export default function Login() {
           display: flex; align-items: center; justify-content: center;
           backdrop-filter: blur(8px);
         }
-        /* Position icons on the ring - top, left, right, bottom */
+
         .icon-top    { top: -21px; left: 50%; transform: translateX(-50%); }
         .icon-left   { left: -21px; top: 50%; transform: translateY(-50%); }
         .icon-right  { right: -21px; top: 50%; transform: translateY(-50%); }
         .icon-bottom { bottom: -21px; left: 50%; transform: translateX(-50%); }
 
-        /* Lines connecting center to icons */
+
         .orbit-line {
           position: absolute; top: 50%; left: 50%;
           width: 1.5px; background: rgba(255,255,255,0.25);
@@ -295,7 +289,7 @@ export default function Login() {
         .line-right  { height: 115px; transform: rotate(90deg) translateX(-50%) translateY(-100%); }
         .line-bottom { height: 115px; transform: rotate(180deg) translateX(-50%) translateY(-100%); }
 
-        /* ── Login card ── */
+
         .card {
           width: 400px;
           background: rgba(30, 70, 200, 0.45);
@@ -305,7 +299,6 @@ export default function Login() {
           backdrop-filter: blur(24px);
           box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
           position: relative;
-          /* partial overlap with orbit circle */
           margin-left: -48px;
         }
 
@@ -358,7 +351,7 @@ export default function Login() {
         }
         .btn-login:active { transform: translateY(0); }
 
-        /* ── Footer ── */
+
         .footer {
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 18px 20px 24px;
@@ -395,7 +388,7 @@ export default function Login() {
         }
       `}</style>
 
-      {/* Splash screen */}
+
       {showSplash && (
         <div className={`splash${splashDone ? " fade-out" : ""}`}>
           <div className={`splash-inner${mounted ? " show" : ""}`}>
@@ -408,7 +401,7 @@ export default function Login() {
         </div>
       )}
 
-      {/* Background */}
+
       <div className="bg">
         <div className="bg-blob blob1" />
         <div className="bg-blob blob2" />
@@ -417,9 +410,9 @@ export default function Login() {
         <div className="wave wave2" />
       </div>
 
-      {/* Main page */}
+
       <div className={`page${!showSplash ? " visible" : ""}`}>
-        {/* Top bar */}
+
         <div className="topbar">
           <div className="title-block">
             <div className="subtitle">Dashboard</div>
@@ -435,9 +428,9 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Center: orbit + card */}
+
         <div className="center">
-          {/* Orbit ring */}
+
           <div className="orbit-wrap">
             <div className="orbit-ring">
               <div className="orbit-line line-top" />
@@ -456,7 +449,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Login card */}
+
           <form className="card" onSubmit={handleSubmit}>
             <h1>Log In</h1>
 
@@ -480,7 +473,7 @@ export default function Login() {
               </div>
             )}
 
-            {/* Username */}
+
             <div className="input-wrap">
               <span className="input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -499,7 +492,7 @@ export default function Login() {
               />
             </div>
 
-            {/* Password */}
+
             <div className="input-wrap">
               <span className="input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -530,10 +523,10 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Footer */}
+
         <div className="footer">
           <div className="footer-brand">
-            {/* Kominfo foot logo */}
+
             <div className="kominfo-foot">
             <img 
               src="/images/logo-kominfo.svg" 
@@ -545,7 +538,7 @@ export default function Login() {
 
             <div className="footer-divider" />
 
-            {/* Sentinel */}
+
             <div className="footer-sentinel">
               <SentinelLogo />
               <span className="sentinel-name">sentinel</span>

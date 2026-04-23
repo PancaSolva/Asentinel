@@ -33,6 +33,33 @@ const Dashboard = () => {
     useEffect(() => {
         fetchDashboardData();
 
+        const channel = window.Echo.channel('monitoring')
+            .listen('MonitoringUpdated', (e) => {
+
+                
+                setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));
+
+                setMonitoringData(prevData => {
+                    if (prevData.some(log => log.id_log_monitor === e.log.id_log_monitor)) {
+                        return prevData;
+                    }
+                    return [e.log, ...prevData].slice(0, 10);
+                });
+
+                fetchDashboardData(false);
+
+                setTimeout(() => {
+                    setNewLogIds(prev => {
+                        const next = new Set(prev);
+                        next.delete(e.log.id_log_monitor);
+                        return next;
+                    });
+                }, 3000);
+            });
+
+        return () => {
+            channel.stopListening('MonitoringUpdated');
+        };
         const intervalId = setInterval(() => fetchDashboardData(false), 20000);
         return () => clearInterval(intervalId);
 
@@ -48,7 +75,7 @@ const Dashboard = () => {
             setStats(statsRes.data.data);
             setMonitoringData(monitorRes.data.data);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+
         } finally {
             if (showLoading) setLoading(false);
         }
@@ -58,10 +85,9 @@ const Dashboard = () => {
         try {
             setChecking(true);
             await api.post('/run-monitoring');
-            // Background refresh after manual trigger without showing loading flash
             await fetchDashboardData(false);
         } catch (error) {
-            console.error('Error running monitoring check:', error);
+
         } finally {
             setChecking(false);
         }
@@ -148,7 +174,7 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-8">
-            {/* Header Section */}
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight flex items-center gap-3">
@@ -173,7 +199,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Stats Grid */}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsCards.map((stat, idx) => (
                     <div key={idx} className={`bg-white p-6 rounded-2xl shadow-sm border ${stat.border} flex items-center gap-5 transition-transform hover:scale-[1.02]`}>
@@ -188,7 +214,7 @@ const Dashboard = () => {
                 ))}
             </div>
 
-            {/* Monitoring Table */}
+
             <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-white to-gray-50/50">
                     <div className="flex items-center gap-3">
@@ -213,7 +239,7 @@ const Dashboard = () => {
                 />
             </div>
 
-            {/* Detail Modal */}
+
             <LogDetailModal 
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}

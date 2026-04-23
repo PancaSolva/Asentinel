@@ -29,7 +29,7 @@ const AplikasiDetail = () => {
             const res = await axios.get(`/api/admin/aplikasi/${id}`);
             setAplikasi(res.data.data);
         } catch (error) {
-            console.error('Error fetching aplikasi detail:', error);
+
         } finally {
             setLoading(false);
         }
