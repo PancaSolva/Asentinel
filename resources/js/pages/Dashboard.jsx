@@ -28,7 +28,7 @@ const Dashboard = () => {
     const [checking, setChecking] = useState(false);
     const [selectedLog, setSelectedLog] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [newLogIds, setNewLogIds] = useState(new Set());
+
 
     useEffect(() => {
         fetchDashboardData();
@@ -60,6 +60,9 @@ const Dashboard = () => {
         return () => {
             channel.stopListening('MonitoringUpdated');
         };
+        const intervalId = setInterval(() => fetchDashboardData(false), 20000);
+        return () => clearInterval(intervalId);
+
     }, []);
 
     const fetchDashboardData = async (showLoading = true) => {
@@ -222,7 +225,8 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        Live Updates
+                        Auto Refresh
+
                     </div>
                 </div>
                 <Table 
@@ -230,11 +234,8 @@ const Dashboard = () => {
                     data={monitoringData}
                     loading={loading}
                     emptyMessage="Infrastructure looks quiet. No monitoring data available."
-                    rowClassName={(row) => 
-                        newLogIds.has(row.id_log_monitor) 
-                        ? 'bg-blue-50/50 animate-in fade-in slide-in-from-top-2 duration-1000' 
-                        : ''
-                    }
+                    rowClassName=""
+
                 />
             </div>
 

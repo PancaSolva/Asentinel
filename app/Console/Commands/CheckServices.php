@@ -25,6 +25,19 @@ class CheckServices extends Command
         foreach ($apps as $app) {
             CheckServiceJob::dispatch($app);
         }
+        // cek semua service
+        Service::chunk(100, function ($services) {
+            foreach ($services as $service) {
+                CheckServiceJob::dispatch($service);
+            }
+        });
+
+        // cek semua aplikasi (kalau ada)
+        Aplikasi::chunk(100, function ($apps) {
+            foreach ($apps as $app) {
+                CheckServiceJob::dispatch($app);
+            }
+        });
 
         $this->info('All services dispatched!');
     }
