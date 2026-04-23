@@ -29,6 +29,7 @@ class CheckServiceJob implements ShouldQueue
     {
         $this->isService = $model instanceof Service;
 
+        // Use the correct primary key for each model type
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
@@ -68,22 +69,6 @@ class CheckServiceJob implements ShouldQueue
 
             $time = (microtime(true) - $start) * 1000;
 
-            $model->update([
-                'status' => 'UP',
-                'lastchecked' => now(),
-                'last_response_time' => (int) $time,
-                'last_status_code' => $response->status()
-            ]);
-
-            $log = LogMonitor::create([
-                'id_aplikasi' => $model->id_aplikasi,
-                'id_service' => $this->isService ? $model->id_service : null,
-                'url' => $url,
-                'status' => 'UP',
-                'http_status_code' => $response->status(),
-                'response_time_ms' => (int) $time,
-                'checked_at' => now()
-            ]);
             $httpStatus = $response->status();
 
             // Check if status code is in 2xx range
@@ -153,8 +138,6 @@ class CheckServiceJob implements ShouldQueue
                     'HTTP Status ' . $httpStatus
                 );
             }
-$log->load(['aplikasi', 'service']);
-            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
 
         } catch (\Exception $e) {
             Log::error("Service DOWN", [
@@ -182,7 +165,7 @@ $log->load(['aplikasi', 'service']);
                 'checked_at' => now()
             ]);
 
-$log->load(['aplikasi', 'service']);
+            $log->load(['aplikasi', 'service']);
 
             if (!$wasDown) {
                 LogAnomali::create([
@@ -241,7 +224,6 @@ $log->load(['aplikasi', 'service']);
             Log::warning('Webhook notification error', [
                 'error' => $webhookError->getMessage(),
             ]);
-            // broadcast(new MonitoringUpdated($log)); // Disabled for AJAX polling
         }
     }
 }

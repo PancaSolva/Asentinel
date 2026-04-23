@@ -13,7 +13,7 @@ class AplikasiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => Aplikasi::all()
+            'data' => Aplikasi::with('services')->get()
         ]);
     }
 

@@ -13,7 +13,9 @@ class LogMonitorController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => LogMonitor::all()
+            'data' => LogMonitor::with(['aplikasi', 'service'])
+                ->latest('checked_at')
+                ->paginate(50)
         ]);
     }
 
