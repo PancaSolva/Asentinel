@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Service;
 use App\Models\Aplikasi;
 use App\Models\LogMonitor;
+use App\Services\AlertService;
 use App\Models\LogAnomali;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,17 +26,22 @@ class CheckServiceJob implements ShouldQueue
     public $tries = 3;
     public $timeout = 10;
 
+    /**
+     * Create a new job instance.
+     */
     public function __construct($model)
     {
         $this->isService = $model instanceof Service;
 
-        // Use the correct primary key for each model type
+        // 🔥 pakai primary key yang benar
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
     }
 
-   
+    /**
+     * Execute the job.
+     */
     public function handle()
     {
         $model = $this->isService
@@ -50,6 +56,7 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
+        // 🔥 Get the URL to check
         $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -84,16 +91,45 @@ class CheckServiceJob implements ShouldQueue
                     'last_status_code' => $httpStatus
                 ]);
 
-            // ✅ simpan log
-            $log = LogMonitor::create([
-                'id_aplikasi' => $model->id_aplikasi,
-                'id_service' => $this->isService ? $model->id_service : null,
-                'url' => $url,
-                'status' => 'UP',
-                'http_status_code' => $response->status(),
-                'response_time_ms' => (int) $time,
-                'checked_at' => now()
-            ]);
+                // ✅ simpan log
+                $log = LogMonitor::create([
+                    'id_aplikasi' => $model->id_aplikasi,
+                    'id_service' => $this->isService ? $model->id_service : null,
+                    'url' => $url,
+                    'status' => 'UP',
+                    'http_status_code' => $httpStatus,
+                    'response_time_ms' => (int) $time,
+                    'checked_at' => now()
+                ]);
+
+                $log->load(['aplikasi', 'service']);
+                broadcast(new MonitoringUpdated($log));
+
+                // 🔔 Telegram: kirim notifikasi recovery (UP)
+                $alertService->sendTelegramIfNeeded(
+                    $serviceName,
+                    'UP',
+                    'Recovered — HTTP ' . $httpStatus,
+                    now()->toIso8601String(),
+                );
+            } else {
+                // ❌ Status code non-2xx → treat as DOWN
+                $model->update([
+                    'status' => 'DOWN',
+                    'lastchecked' => now(),
+                    'last_response_time' => (int) $time,
+                    'last_status_code' => $httpStatus
+                ]);
+
+                $log = LogMonitor::create([
+                    'id_aplikasi' => $model->id_aplikasi,
+                    'id_service' => $this->isService ? $model->id_service : null,
+                    'url' => $url,
+                    'status' => 'DOWN',
+                    'http_status_code' => $httpStatus,
+                    'response_time_ms' => (int) $time,
+                    'checked_at' => now()
+                ]);
 
                 LogAnomali::create([
                     'id_aplikasi' => $model->id_aplikasi,
@@ -105,6 +141,26 @@ class CheckServiceJob implements ShouldQueue
 
                 $log->load(['aplikasi', 'service']);
                 broadcast(new MonitoringUpdated($log));
+
+                // 🔔 Email alert (mas Bama)
+                $alertService->sendAlertIfNeeded(
+                    $serviceName,
+                    $url,
+                    $httpStatus,
+                    "HTTP Status {$httpStatus}",
+                    $model->id_aplikasi,
+                    $this->isService ? $model->id_service : null,
+                    now()->toIso8601String(),
+                );
+
+                // 🔔 Telegram alert
+                $alertService->sendTelegramIfNeeded(
+                    $serviceName,
+                    'DOWN',
+                    'HTTP Status ' . $httpStatus,
+                    now()->toIso8601String(),
+                );
+            }
 
         } catch (\Exception $e) {
             Log::error("Service DOWN", [
@@ -134,16 +190,21 @@ class CheckServiceJob implements ShouldQueue
 
             $log->load(['aplikasi', 'service']);
 
-            LogAnomali::create([
-                'id_aplikasi' => $model->id_aplikasi,
-                'id_service' => $this->isService ? $model->id_service : null,
-                'description' => "Endpoint {$url} is DOWN",
-                'severity' => 'high',
-                'detected_at' => now(),
-            ]);
+            if (!$wasDown) {
+                LogAnomali::create([
+                    'id_aplikasi' => $model->id_aplikasi,
+                    'id_service' => $this->isService ? $model->id_service : null,
+                    'description' => "Endpoint {$url} is DOWN",
+                    'severity' => 'high',
+                    'detected_at' => now(),
+                ]);
+            }
 
-            app(AlertService::class)->sendAlertIfNeeded(
-                $model->nama ?? $url,
+            broadcast(new MonitoringUpdated($log));
+
+            // 🔔 Email alert (mas Bama)
+            $alertService->sendAlertIfNeeded(
+                $serviceName,
                 $url,
                 0,
                 $e->getMessage(),
@@ -152,7 +213,13 @@ class CheckServiceJob implements ShouldQueue
                 now()->toIso8601String(),
             );
 
-            broadcast(new MonitoringUpdated($log));
+            // 🔔 Telegram alert
+            $alertService->sendTelegramIfNeeded(
+                $serviceName,
+                'DOWN',
+                $e->getMessage(),
+                now()->toIso8601String(),
+            );
         }
     }
 }
