@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { 
-    Activity, 
-    AppWindow, 
-    Server, 
-    AlertCircle, 
-    CheckCircle, 
-    Clock, 
-    TrendingUp, 
-    RefreshCcw,
-    LayoutDashboard,
-    Eye
+    Activity, AppWindow, Server, AlertCircle, CheckCircle, 
+    Clock, TrendingUp, RefreshCcw, LayoutDashboard, Eye
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import Table from '../components/Table';
@@ -18,65 +10,30 @@ import LogDetailModal from '../components/LogDetailModal';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
-        totalAplikasi: 0,
-        totalServices: 0,
-        totalUp: 0,
-        totalDown: 0,
+        totalAplikasi: 0, totalServices: 0, totalUp: 0, totalDown: 0,
     });
     const [monitoringData, setMonitoringData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [checking, setChecking] = useState(false);
     const [selectedLog, setSelectedLog] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [newLogIds, setNewLogIds] = useState(new Set());
 
     useEffect(() => {
         fetchDashboardData();
-
-        const channel = window.Echo.channel('monitoring')
-            .listen('MonitoringUpdated', (e) => {
-                console.log('Monitoring update received:', e.log);
-                
-                // Track new log ID for animation
-                setNewLogIds(prev => new Set(prev).add(e.log.id_log_monitor));
-
-                // Update monitoring data smoothly by prepending the new log locally first
-                setMonitoringData(prevData => {
-                    if (prevData.some(log => log.id_log_monitor === e.log.id_log_monitor)) {
-                        return prevData;
-                    }
-                    return [e.log, ...prevData].slice(0, 10);
-                });
-
-                // Then fetch everything in background to update stats and ensure data consistency
-                fetchDashboardData(false);
-
-                // Remove the "new" highlight after some time
-                setTimeout(() => {
-                    setNewLogIds(prev => {
-                        const next = new Set(prev);
-                        next.delete(e.log.id_log_monitor);
-                        return next;
-                    });
-                }, 3000);
-            });
-
-        return () => {
-            channel.stopListening('MonitoringUpdated');
-        };
+        const intervalId = setInterval(() => fetchDashboardData(false), 20000);
+        return () => clearInterval(intervalId);
     }, []);
 
     const fetchDashboardData = async (showLoading = true) => {
         try {
             if (showLoading) setLoading(true);
             const [statsRes, monitorRes] = await Promise.all([
-                axios.get('/api/admin/dashboard-stats'),
-                axios.get('/api/admin/monitoring-logs')
+                api.get('/dashboard-stats'),
+                api.get('/monitoring-logs')
             ]);
             setStats(statsRes.data.data);
             setMonitoringData(monitorRes.data.data);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
         } finally {
             if (showLoading) setLoading(false);
         }
@@ -85,11 +42,9 @@ const Dashboard = () => {
     const runMonitoringCheck = async () => {
         try {
             setChecking(true);
-            await axios.post('/api/admin/run-monitoring');
-            // Background refresh after manual trigger without showing loading flash
+            await api.post('/run-monitoring');
             await fetchDashboardData(false);
         } catch (error) {
-            console.error('Error running monitoring check:', error);
         } finally {
             setChecking(false);
         }
@@ -130,10 +85,7 @@ const Dashboard = () => {
                 </code>
             )
         },
-        { 
-            header: 'Status', 
-            render: (row) => <StatusBadge status={row.status} /> 
-        },
+        { header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
         { 
             header: 'Code', 
             render: (row) => (
@@ -166,7 +118,7 @@ const Dashboard = () => {
             render: (row) => (
                 <button 
                     onClick={() => handleLogClick(row)}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all group-hover:translate-x-[-4px]"
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                 >
                     <Eye className="w-5 h-5" />
                 </button>
@@ -176,7 +128,6 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-8">
-            {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight flex items-center gap-3">
@@ -201,7 +152,6 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsCards.map((stat, idx) => (
                     <div key={idx} className={`bg-white p-6 rounded-2xl shadow-sm border ${stat.border} flex items-center gap-5 transition-transform hover:scale-[1.02]`}>
@@ -216,7 +166,6 @@ const Dashboard = () => {
                 ))}
             </div>
 
-            {/* Monitoring Table */}
             <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-white to-gray-50/50">
                     <div className="flex items-center gap-3">
@@ -227,7 +176,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        Live Updates
+                        Auto Refresh
                     </div>
                 </div>
                 <Table 
@@ -235,15 +184,10 @@ const Dashboard = () => {
                     data={monitoringData}
                     loading={loading}
                     emptyMessage="Infrastructure looks quiet. No monitoring data available."
-                    rowClassName={(row) => 
-                        newLogIds.has(row.id_log_monitor) 
-                        ? 'bg-blue-50/50 animate-in fade-in slide-in-from-top-2 duration-1000' 
-                        : ''
-                    }
+                    rowClassName=""
                 />
             </div>
 
-            {/* Detail Modal */}
             <LogDetailModal 
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}

@@ -13,7 +13,9 @@ class LogAnomaliController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => LogAnomali::all()
+            'data' => LogAnomali::with(['aplikasi', 'service'])
+                ->latest('detected_at')
+                ->paginate(50)
         ]);
     }
 

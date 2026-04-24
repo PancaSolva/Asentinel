@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Plus, Edit, Trash2, Eye, AppWindow, Globe, Search } from 'lucide-react';
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
@@ -28,10 +28,10 @@ const AplikasiIndex = () => {
     const fetchAplikasi = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/api/admin/aplikasi');
+            const res = await api.get('/aplikasi');
             setAplikasi(res.data.data);
         } catch (error) {
-            console.error('Error fetching aplikasi:', error);
+
         } finally {
             setLoading(false);
         }
@@ -41,16 +41,16 @@ const AplikasiIndex = () => {
         e.preventDefault();
         try {
             if (editingAplikasi) {
-                await axios.put(`/api/admin/aplikasi/${editingAplikasi.id_aplikasi}`, formData);
+                await api.put(`/aplikasi/${editingAplikasi.id_aplikasi}`, formData);
             } else {
-                await axios.post('/api/admin/aplikasi', formData);
+                await api.post('/aplikasi', formData);
             }
             setShowModal(false);
             setEditingAplikasi(null);
             resetForm();
             fetchAplikasi();
         } catch (error) {
-            console.error('Error saving aplikasi:', error);
+
         }
     };
 
@@ -83,18 +83,18 @@ const AplikasiIndex = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this aplikasi?')) {
             try {
-                await axios.delete(`/api/admin/aplikasi/${id}`);
+                await api.delete(`/aplikasi/${id}`);
                 fetchAplikasi();
             } catch (error) {
-                console.error('Error deleting aplikasi:', error);
+
             }
         }
     };
 
-    const filteredData = aplikasi.filter(app => 
-        app.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.tipe.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredData = useMemo(() => aplikasi.filter(app => 
+        (app.nama || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (app.tipe || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ), [aplikasi, searchTerm]);
 
     const columns = [
         { 

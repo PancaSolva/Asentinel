@@ -12,22 +12,19 @@ class CheckServices extends Command
     protected $signature = 'services:check';
     protected $description = 'Check all services and applications';
 
-
     public function handle()
     {
-    
-        // cek semua service
-        $services = Service::all();
+        // Only dispatch for items that have a valid URL to check
+        $services = Service::whereNotNull('url_service')->where('url_service', '!=', '')->get();
         foreach ($services as $service) {
             CheckServiceJob::dispatch($service);
         }
 
-        // cek semua aplikasi (kalau ada)
-        $apps = Aplikasi::all();
+        $apps = Aplikasi::whereNotNull('url_service')->where('url_service', '!=', '')->get();
         foreach ($apps as $app) {
             CheckServiceJob::dispatch($app);
         }
 
-        $this->info('All services dispatched!');
+        $this->info("Dispatched {$services->count()} services + {$apps->count()} apps for checking.");
     }
 }

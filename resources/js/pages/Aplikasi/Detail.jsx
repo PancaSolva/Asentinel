@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { 
     ArrowLeft, 
     AppWindow, 
@@ -26,10 +26,10 @@ const AplikasiDetail = () => {
     const fetchDetail = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`/api/admin/aplikasi/${id}`);
+            const res = await api.get(`/aplikasi/${id}`);
             setAplikasi(res.data.data);
         } catch (error) {
-            console.error('Error fetching aplikasi detail:', error);
+
         } finally {
             setLoading(false);
         }

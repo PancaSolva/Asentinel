@@ -6,12 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Aplikasi;
 use App\Models\Service;
 use App\Models\LogMonitor;
-use App\Models\LogAnomali;
-use App\Services\AlertService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use App\Events\MonitoringUpdated;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MonitoringController extends Controller
 {
@@ -19,14 +15,14 @@ class MonitoringController extends Controller
     {
         $totalAplikasi = Aplikasi::count();
         $totalServices = Service::count();
-        
-        // Simplified latest status logic
-        $latestLogs = LogMonitor::orderBy('checked_at', 'desc')->get()->unique(function($item) {
-            return ($item->id_aplikasi ?? '0') . '-' . ($item->id_service ?? '0');
-        });
 
-        $totalUp = $latestLogs->where('status', 'UP')->count();
-        $totalDown = $latestLogs->where('status', 'DOWN')->count();
+        // Get the latest log per unique aplikasi+service combination using a subquery
+        $latestIds = LogMonitor::select(DB::raw('MAX(id_log_monitor) as id'))
+            ->groupBy('id_aplikasi', 'id_service')
+            ->pluck('id');
+
+        $totalUp = LogMonitor::whereIn('id_log_monitor', $latestIds)->where('status', 'UP')->count();
+        $totalDown = LogMonitor::whereIn('id_log_monitor', $latestIds)->where('status', 'DOWN')->count();
 
         return response()->json([
             'success' => true,

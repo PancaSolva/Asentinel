@@ -31,7 +31,6 @@ const Table = ({ columns, data, loading, emptyMessage = "No data found.", rowCla
                         </tr>
                     ) : (
                         data.map((row, rowIdx) => {
-                            // Use a unique ID from the row if available, otherwise fallback to index
                             const rowKey = row.id_log_monitor || row.id || rowIdx;
                             const customRowClass = rowClassName ? rowClassName(row) : '';
                             

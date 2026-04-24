@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from 'react';
+import api from '../../api';
 import { Plus, Edit, Trash2, Server, AppWindow, Search, Globe, Link as LinkIcon } from 'lucide-react';
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
@@ -14,7 +14,7 @@ const ServiceIndex = () => {
     const [formData, setFormData] = useState({
         id_aplikasi: '',
         nama: '',
-        tipe_service: 'backend',
+        type_service: 'backend',
         ip_local: '',
         url_service: '',
         url_repository: '',
@@ -22,28 +22,33 @@ const ServiceIndex = () => {
     });
 
     useEffect(() => {
-        fetchServices();
-        fetchAplikasis();
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [servicesRes, aplikasiRes] = await Promise.all([
+                    api.get('/services'),
+                    api.get('/aplikasi')
+                ]);
+                setServices(servicesRes.data.data);
+                setAplikasis(aplikasiRes.data.data.filter(app => app.tipe === 'microservice'));
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     const fetchServices = async () => {
         try {
             setLoading(true);
-            const res = await axios.get('/api/admin/services');
+            const res = await api.get('/services');
             setServices(res.data.data);
         } catch (error) {
-            console.error('Error fetching services:', error);
+
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchAplikasis = async () => {
-        try {
-            const res = await axios.get('/api/admin/aplikasi');
-            setAplikasis(res.data.data.filter(app => app.tipe === 'microservice'));
-        } catch (error) {
-            console.error('Error fetching aplikasis:', error);
         }
     };
 
@@ -51,16 +56,16 @@ const ServiceIndex = () => {
         e.preventDefault();
         try {
             if (editingService) {
-                await axios.put(`/api/admin/services/${editingService.id_service}`, formData);
+                await api.put(`/services/${editingService.id_service}`, formData);
             } else {
-                await axios.post('/api/admin/services', formData);
+                await api.post('/services', formData);
             }
             setShowModal(false);
             setEditingService(null);
             resetForm();
             fetchServices();
         } catch (error) {
-            console.error('Error saving service:', error);
+
         }
     };
 
@@ -68,7 +73,7 @@ const ServiceIndex = () => {
         setFormData({
             id_aplikasi: '',
             nama: '',
-            tipe_service: 'backend',
+            type_service: 'backend',
             ip_local: '',
             url_service: '',
             url_repository: '',
@@ -81,7 +86,7 @@ const ServiceIndex = () => {
         setFormData({
             id_aplikasi: service.id_aplikasi,
             nama: service.nama,
-            tipe_service: service.tipe_service || 'backend',
+            type_service: service.type_service || 'backend',
             ip_local: service.ip_local || '',
             url_service: service.url_service || '',
             url_repository: service.url_repository || '',
@@ -93,18 +98,18 @@ const ServiceIndex = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this service?')) {
             try {
-                await axios.delete(`/api/admin/services/${id}`);
+                await api.delete(`/services/${id}`);
                 fetchServices();
             } catch (error) {
-                console.error('Error deleting service:', error);
+
             }
         }
     };
 
-    const filteredData = services.filter(service => 
-        service.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.aplikasi?.nama.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredData = useMemo(() => services.filter(service => 
+        (service.nama || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.aplikasi?.nama || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ), [services, searchTerm]);
 
     const columns = [
         { 
@@ -128,9 +133,9 @@ const ServiceIndex = () => {
             header: 'Type', 
             render: (row) => (
                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
-                    row.tipe_service === 'frontend' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'
+                    row.type_service === 'frontend' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'
                 }`}>
-                    {row.tipe_service}
+                    {row.type_service}
                 </span>
             )
         },
@@ -243,8 +248,8 @@ const ServiceIndex = () => {
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Service Type</label>
                         <select
                             className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-gray-700 appearance-none"
-                            value={formData.tipe_service}
-                            onChange={(e) => setFormData({...formData, tipe_service: e.target.value})}
+                            value={formData.type_service}
+                            onChange={(e) => setFormData({...formData, type_service: e.target.value})}
                         >
                             <option value="frontend">Frontend</option>
                             <option value="backend">Backend</option>
