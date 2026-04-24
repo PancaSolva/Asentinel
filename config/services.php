@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Telegram Bot (Asentinel Monitoring Alerts)
+    |--------------------------------------------------------------------------
+    |
+    | Bot token and chat ID for sending monitoring alerts via Telegram.
+    | Create a bot via @BotFather and get the chat ID from @userinfobot.
+    |
+    */
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN', ''),
+        'chat_id' => env('TELEGRAM_CHAT_ID', ''),
+        'cooldown_minutes' => (int) env('TELEGRAM_COOLDOWN_MINUTES', 5),
+    ],
+
 ];

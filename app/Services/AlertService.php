@@ -6,6 +6,7 @@ use App\Mail\ServiceDownAlertMail;
 use App\Models\LogMonitor;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -14,6 +15,12 @@ class AlertService
 {
     // ADDED: alerting system cooldown prefix keyed per service.
     private const COOLDOWN_PREFIX = 'monitoring-alert-cooldown:';
+
+    // Telegram cooldown prefixes
+    private const TG_COOLDOWN_PREFIX = 'telegram-cooldown:';
+    private const TG_LAST_STATUS_PREFIX = 'telegram-last-status:';
+
+    // ─── Email Alert (by mas Bama) ───────────────────────────
 
     public function sendAlertIfNeeded(
         string $serviceName,
@@ -73,6 +80,133 @@ class AlertService
             ]);
         }
     }
+
+    // ─── Telegram Alert ──────────────────────────────────────
+
+    /**
+     * Send a Telegram notification if cooldown allows.
+     *
+     * Cooldown is tracked **per-service** via Laravel Cache.
+     * Status changes (DOWN→UP or UP→DOWN) always bypass cooldown.
+     */
+    public function sendTelegramIfNeeded(
+        string $serviceName,
+        string $status,
+        string $message,
+        ?string $timestamp = null,
+    ): void {
+        $token = (string) config('services.telegram.bot_token');
+        $chatId = (string) config('services.telegram.chat_id');
+
+        if ($token === '' || $chatId === '') {
+            Log::debug('Telegram alert skipped: bot_token or chat_id not configured.');
+            return;
+        }
+
+        $serviceKey = md5(mb_strtolower(trim($serviceName)));
+        $statusUpper = mb_strtoupper(trim($status));
+        $cooldownMinutes = (int) config('services.telegram.cooldown_minutes', 5);
+
+        // --- Cooldown logic (per-service, status-aware) ---
+        $lastStatusKey = self::TG_LAST_STATUS_PREFIX . $serviceKey;
+        $cooldownKey = self::TG_COOLDOWN_PREFIX . $serviceKey . ':' . $statusUpper;
+        $lastStatus = Cache::get($lastStatusKey);
+
+        // Same service + same status + within cooldown → BLOCK
+        if ($lastStatus === $statusUpper && Cache::has($cooldownKey)) {
+            Log::info('Telegram alert suppressed (cooldown active)', [
+                'service' => $serviceName,
+                'status' => $statusUpper,
+            ]);
+            return;
+        }
+
+        // Update state
+        Cache::put($lastStatusKey, $statusUpper, now()->addHours(24));
+        Cache::put($cooldownKey, true, now()->addMinutes($cooldownMinutes));
+
+        // --- Format & send ---
+        $ts = $timestamp ?? now()->toIso8601String();
+        $text = $this->formatTelegramMessage($serviceName, $statusUpper, $message, $ts);
+
+        $this->sendTelegramWithRetry($token, $chatId, $text);
+    }
+
+    /**
+     * Format a Telegram alert message with Markdown.
+     */
+    private function formatTelegramMessage(
+        string $serviceName,
+        string $status,
+        string $message,
+        string $timestamp,
+    ): string {
+        $isDown = $status === 'DOWN';
+        $emoji = $isDown ? '🔴' : '🟢';
+        $title = $isDown ? 'SERVICE DOWN' : 'SERVICE RECOVERED';
+        $messageLabel = $isDown ? 'Error' : 'Info';
+
+        $formattedTime = now()->parse($timestamp)->format('Y-m-d H:i:s');
+
+        return implode("\n", [
+            "{$emoji} *{$title}*",
+            "",
+            "🏷 *Service:* {$serviceName}",
+            "🕐 *Waktu:* {$formattedTime}",
+            "❌ *{$messageLabel}:* {$message}",
+            "",
+            "🖥 _Asentinel Monitor_",
+        ]);
+    }
+
+    /**
+     * Send a Telegram message with retry (3 attempts, exponential backoff).
+     */
+    private function sendTelegramWithRetry(string $token, string $chatId, string $text): void
+    {
+        $url = "https://api.telegram.org/bot{$token}/sendMessage";
+        $maxAttempts = 3;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                $http = Http::timeout(10);
+
+                // Skip SSL verification in local dev (Windows self-signed cert issue)
+                if (app()->environment('local')) {
+                    $http = $http->withoutVerifying();
+                }
+
+                $response = $http->post($url, [
+                    'chat_id' => $chatId,
+                    'text' => $text,
+                    'parse_mode' => 'Markdown',
+                ]);
+
+                if ($response->successful()) {
+                    Log::info("Telegram message sent successfully (attempt {$attempt})");
+                    return;
+                }
+
+                Log::warning("Telegram API returned error (attempt {$attempt})", [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            } catch (Throwable $e) {
+                Log::warning("Telegram send failed (attempt {$attempt})", [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Exponential backoff: 1s, 2s, 4s
+            if ($attempt < $maxAttempts) {
+                usleep(pow(2, $attempt - 1) * 1_000_000);
+            }
+        }
+
+        Log::error('Telegram message failed after all retry attempts.');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
 
     private function resolveFailureDuration(?int $idAplikasi, ?int $idService, CarbonImmutable $detectedAt): ?string
     {
