@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Service;
 use App\Models\Aplikasi;
 use App\Models\LogMonitor;
+use App\Services\AlertService;
 use App\Models\LogAnomali;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,17 +26,22 @@ class CheckServiceJob implements ShouldQueue
     public $tries = 3;
     public $timeout = 10;
 
+    /**
+     * Create a new job instance.
+     */
     public function __construct($model)
     {
         $this->isService = $model instanceof Service;
 
-        // Use the correct primary key for each model type
+        // 🔥 pakai primary key yang benar
         $this->modelId = $this->isService
             ? $model->id_service
             : $model->id_aplikasi;
     }
 
-   
+    /**
+     * Execute the job.
+     */
     public function handle()
     {
         $model = $this->isService
@@ -50,6 +56,7 @@ class CheckServiceJob implements ShouldQueue
             return;
         }
 
+        // 🔥 Get the URL to check
         $url = $model->url_service;
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -59,6 +66,9 @@ class CheckServiceJob implements ShouldQueue
             ]);
             return;
         }
+
+        $alertService = app(AlertService::class);
+        $serviceName = $model->nama ?? ($model->name ?? $url);
 
         try {
             Log::info("Checking URL: {$url}");
@@ -95,11 +105,12 @@ class CheckServiceJob implements ShouldQueue
                 $log->load(['aplikasi', 'service']);
                 broadcast(new MonitoringUpdated($log));
 
-                // 🔔 Kirim webhook notifikasi UP (recovery)
-                $this->sendWebhookNotification(
-                    $model->nama ?? ($model->name ?? 'Unknown'),
+                // 🔔 Telegram: kirim notifikasi recovery (UP)
+                $alertService->sendTelegramIfNeeded(
+                    $serviceName,
                     'UP',
-                    'Recovered — HTTP ' . $httpStatus
+                    'Recovered — HTTP ' . $httpStatus,
+                    now()->toIso8601String(),
                 );
             } else {
                 // ❌ Status code non-2xx → treat as DOWN
@@ -131,11 +142,23 @@ class CheckServiceJob implements ShouldQueue
                 $log->load(['aplikasi', 'service']);
                 broadcast(new MonitoringUpdated($log));
 
-                // 🔔 Kirim webhook notifikasi DOWN
-                $this->sendWebhookNotification(
-                    $model->nama ?? ($model->name ?? 'Unknown'),
+                // 🔔 Email alert (mas Bama)
+                $alertService->sendAlertIfNeeded(
+                    $serviceName,
+                    $url,
+                    $httpStatus,
+                    "HTTP Status {$httpStatus}",
+                    $model->id_aplikasi,
+                    $this->isService ? $model->id_service : null,
+                    now()->toIso8601String(),
+                );
+
+                // 🔔 Telegram alert
+                $alertService->sendTelegramIfNeeded(
+                    $serviceName,
                     'DOWN',
-                    'HTTP Status ' . $httpStatus
+                    'HTTP Status ' . $httpStatus,
+                    now()->toIso8601String(),
                 );
             }
 
@@ -179,51 +202,24 @@ class CheckServiceJob implements ShouldQueue
 
             broadcast(new MonitoringUpdated($log));
 
-            // 🔔 Kirim webhook notifikasi DOWN
-            $this->sendWebhookNotification(
-                $model->nama ?? ($model->name ?? 'Unknown'),
-                'DOWN',
-                $e->getMessage()
+            // 🔔 Email alert (mas Bama)
+            $alertService->sendAlertIfNeeded(
+                $serviceName,
+                $url,
+                0,
+                $e->getMessage(),
+                $model->id_aplikasi,
+                $this->isService ? $model->id_service : null,
+                now()->toIso8601String(),
             );
-        }
-    }
 
-    /**
-     * Send a notification payload to the FastAPI webhook microservice.
-     */
-    private function sendWebhookNotification(string $serviceName, string $status, string $message): void
-    {
-        $webhookUrl = config('services.webhook.url', 'http://localhost:9000');
-        $webhookSecret = config('services.webhook.secret', '');
-
-        try {
-            $response = Http::timeout(5)
-                ->withHeaders([
-                    'X-Webhook-Secret' => $webhookSecret,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($webhookUrl . '/webhook', [
-                    'service_name' => $serviceName,
-                    'status' => $status,
-                    'message' => $message,
-                    'timestamp' => now()->toISOString(),
-                ]);
-
-            if ($response->successful()) {
-                Log::info('Webhook notification sent', [
-                    'service' => $serviceName,
-                    'status' => $status,
-                ]);
-            } else {
-                Log::warning('Webhook notification failed', [
-                    'status_code' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-            }
-        } catch (\Exception $webhookError) {
-            Log::warning('Webhook notification error', [
-                'error' => $webhookError->getMessage(),
-            ]);
+            // 🔔 Telegram alert
+            $alertService->sendTelegramIfNeeded(
+                $serviceName,
+                'DOWN',
+                $e->getMessage(),
+                now()->toIso8601String(),
+            );
         }
     }
 }

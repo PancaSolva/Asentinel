@@ -37,17 +37,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Asentinel Webhook Microservice
+    | Telegram Bot (Asentinel Monitoring Alerts)
     |--------------------------------------------------------------------------
     |
-    | URL and shared secret for the FastAPI webhook notification service.
-    | The CheckServiceJob sends monitoring events here for Telegram dispatch.
+    | Bot token and chat ID for sending monitoring alerts via Telegram.
+    | Create a bot via @BotFather and get the chat ID from @userinfobot.
     |
     */
 
-    'webhook' => [
-        'url' => env('WEBHOOK_URL', 'http://localhost:9000'),
-        'secret' => env('WEBHOOK_SECRET', ''),
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN', ''),
+        'chat_id' => env('TELEGRAM_CHAT_ID', ''),
+        'cooldown_minutes' => (int) env('TELEGRAM_COOLDOWN_MINUTES', 5),
     ],
 
 ];
