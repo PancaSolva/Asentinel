@@ -13,7 +13,16 @@ export default defineConfig({
         react(),
     ],
     server: {
-        host: '127.0.0.1',
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        cors: true,
+        hmr: {
+            host: 'vite.hugobama.my.id',
+            clientPort: 443,
+            protocol: 'wss',
+        },
+        
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
