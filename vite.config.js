@@ -18,9 +18,7 @@ export default defineConfig({
         strictPort: true,
         cors: true,
         hmr: {
-            host: 'vite.hugobama.my.id',
-            clientPort: 443,
-            protocol: 'wss',
+            host: 'localhost',
         },
         
         watch: {

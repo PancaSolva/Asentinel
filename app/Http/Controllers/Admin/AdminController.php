@@ -20,11 +20,11 @@ class AdminController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'username' => 'required',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('name', $request->username)->orWhere('email', $request->username)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             if ($request->expectsJson()) {
@@ -33,7 +33,7 @@ class AdminController extends Controller
                     'message' => 'The provided credentials are incorrect.'
                 ], 401);
             }
-            return back()->withErrors(['email' => 'The provided credentials are incorrect.']);
+            return back()->withErrors(['username' => 'The provided credentials are incorrect.']);
         }
 
         // Create a single auth token for both web and API use
@@ -46,14 +46,21 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Login successful',
-                'user' => $user,
-                'token' => $token
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+                'token' => $token,
+                'role' => $user->role,
             ]);
         }
 
         session(['spa_token' => $token]);
 
-        return redirect('/');
+        // Redirect based on role
+        return redirect($user->role === 'admin' ? '/' : '/user-dashboard');
     }
 
     public function logout(Request $request)
@@ -80,6 +87,10 @@ class AdminController extends Controller
     public function ShowLogin()
     {
         if (session('admin_logged_in') || Auth::check()) {
+            $user = session('admin_user') ?? Auth::user();
+            if ($user && $user->role !== 'admin') {
+                return redirect('/user-dashboard');
+            }
             return redirect('/');
         }
         return view('admin.login');

@@ -15,6 +15,7 @@ class MonitoringController extends Controller
     {
         $totalAplikasi = Aplikasi::count();
         $totalServices = Service::count();
+        $warningThresholdMs = 1000;
 
         // Get the latest log per unique aplikasi+service combination using a subquery
         $latestIds = LogMonitor::select(DB::raw('MAX(id_log_monitor) as id'))
@@ -23,6 +24,11 @@ class MonitoringController extends Controller
 
         $totalUp = LogMonitor::whereIn('id_log_monitor', $latestIds)->where('status', 'UP')->count();
         $totalDown = LogMonitor::whereIn('id_log_monitor', $latestIds)->where('status', 'DOWN')->count();
+        $totalWarning = LogMonitor::whereIn('id_log_monitor', $latestIds)
+            ->where('status', 'UP')
+            ->whereNotNull('response_time_ms')
+            ->where('response_time_ms', '>=', $warningThresholdMs)
+            ->count();
 
         return response()->json([
             'success' => true,
@@ -31,6 +37,7 @@ class MonitoringController extends Controller
                 'totalServices' => $totalServices,
                 'totalUp' => $totalUp,
                 'totalDown' => $totalDown,
+                'totalWarning' => $totalWarning,
             ]
         ]);
     }

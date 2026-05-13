@@ -28,21 +28,34 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'name' => 'required|string|max:255|unique:users,name',
+            'email' => 'nullable|email|unique:users,email',
             'password' => 'required|min:8',
             'role' => 'required|string|in:admin,user',
+        ], [
+            'name.required' => 'Username is required.',
+            'name.unique' => 'Username already exists.',
+            'email.email' => 'Email format is invalid.',
+            'email.unique' => 'Email already exists.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'role.required' => 'Role is required.',
+            'role.in' => 'Role must be admin or user.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }
 
         $data = $validator->validated();
-        $data['password'] = Hash::make($data['password']);
+        // Remove null email to avoid storing empty strings
+        if (empty($data['email'])) {
+            unset($data['email']);
+        }
 
         $user = User::create($data);
 
@@ -68,22 +81,31 @@ class UserController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'name' => 'sometimes|required|string|max:255|unique:users,name,' . $id,
+            'email' => 'nullable|email|unique:users,email,' . $id,
             'password' => 'sometimes|required|min:8',
             'role' => 'sometimes|required|string|in:admin,user',
+        ], [
+            'name.required' => 'Username is required.',
+            'name.unique' => 'Username already exists.',
+            'email.email' => 'Email format is invalid.',
+            'email.unique' => 'Email already exists.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'role.in' => 'Role must be admin or user.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }
 
         $data = $validator->validated();
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        // Remove email key if empty so it doesn't overwrite existing
+        if (array_key_exists('email', $data) && empty($data['email'])) {
+            unset($data['email']);
         }
 
         $user->update($data);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
-import { Plus, Edit, Trash2, User, Mail, Shield, Search, Lock } from 'lucide-react';
+import { Plus, Edit, Trash2, User, Mail, Shield, Search, Lock, CheckCircle, XCircle } from 'lucide-react';
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
 
@@ -10,6 +10,8 @@ const UserIndex = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [notification, setNotification] = useState(null);
+    const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -21,33 +23,77 @@ const UserIndex = () => {
         fetchUsers();
     }, []);
 
+    // Auto-dismiss notification after 4 seconds
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
     const fetchUsers = async () => {
         try {
             setLoading(true);
             const res = await api.get('/users');
             setUsers(res.data.data);
         } catch (error) {
-
+            setNotification({ type: 'error', message: 'Failed to load users.' });
         } finally {
             setLoading(false);
         }
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e?.preventDefault();
+        
+        // Client-side validation
+        if (!formData.name.trim()) {
+            setNotification({ type: 'error', message: 'Username is required.' });
+            return;
+        }
+        if (!editingUser && !formData.password) {
+            setNotification({ type: 'error', message: 'Password is required.' });
+            return;
+        }
+        if (formData.password && formData.password.length < 8) {
+            setNotification({ type: 'error', message: 'Password must be at least 8 characters.' });
+            return;
+        }
+
         try {
+            setSaving(true);
+            const payload = { ...formData };
+            
+            // Don't send empty password on edit
+            if (editingUser && !payload.password) {
+                delete payload.password;
+            }
+            // Don't send empty email
+            if (!payload.email || !payload.email.trim()) {
+                delete payload.email;
+            }
+
             if (editingUser) {
-                await api.put(`/users/${editingUser.id}`, formData);
+                await api.put(`/users/${editingUser.id}`, payload);
+                setNotification({ type: 'success', message: 'User updated successfully!' });
             } else {
-                await api.post('/users', formData);
+                await api.post('/users', payload);
+                setNotification({ type: 'success', message: 'User created successfully!' });
             }
             setShowModal(false);
             setEditingUser(null);
             resetForm();
             fetchUsers();
         } catch (error) {
-
-            alert(error.response?.data?.message || 'Error saving user');
+            // Show the first error message from the backend
+            const msg = error.response?.data?.message 
+                || error.response?.data?.errors?.name?.[0]
+                || error.response?.data?.errors?.email?.[0]
+                || error.response?.data?.errors?.password?.[0]
+                || 'Error saving user. Please check your input.';
+            setNotification({ type: 'error', message: msg });
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -64,7 +110,7 @@ const UserIndex = () => {
         setEditingUser(user);
         setFormData({
             name: user.name,
-            email: user.email,
+            email: user.email || '',
             password: '',
             role: user.role || 'user',
         });
@@ -75,9 +121,10 @@ const UserIndex = () => {
         if (window.confirm('Are you sure you want to delete this user?')) {
             try {
                 await api.delete(`/users/${id}`);
+                setNotification({ type: 'success', message: 'User deleted successfully!' });
                 fetchUsers();
             } catch (error) {
-
+                setNotification({ type: 'error', message: 'Failed to delete user.' });
             }
         }
     };
@@ -85,7 +132,7 @@ const UserIndex = () => {
 
     const filteredData = users.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     const columns = [
@@ -98,10 +145,12 @@ const UserIndex = () => {
                     </div>
                     <div>
                         <div className="font-bold text-gray-800">{row.name}</div>
-                        <div className="text-xs text-gray-400 flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {row.email}
-                        </div>
+                        {row.email && (
+                            <div className="text-xs text-gray-400 flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {row.email}
+                            </div>
+                        )}
                     </div>
                 </div>
             )
@@ -145,6 +194,29 @@ const UserIndex = () => {
 
     return (
         <div className="space-y-6">
+            {/* Notification Toast */}
+            {notification && (
+                <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-sm font-bold transition-all duration-300 ${
+                    notification.type === 'success' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-red-600 text-white'
+                }`}
+                    style={{ animation: 'slideIn 0.3s ease-out' }}
+                >
+                    {notification.type === 'success' 
+                        ? <CheckCircle className="w-5 h-5" /> 
+                        : <XCircle className="w-5 h-5" />}
+                    {notification.message}
+                </div>
+            )}
+            
+            <style>{`
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `}</style>
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <div>
                     <h2 className="text-2xl font-extrabold text-gray-800 tracking-tight">User Management</h2>
@@ -198,16 +270,23 @@ const UserIndex = () => {
                         </button>
                         <button 
                             onClick={handleSubmit}
-                            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm"
+                            disabled={saving}
+                            className={`px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-200 ${
+                                saving 
+                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }`}
                         >
-                            {editingUser ? 'Update User' : 'Create User'}
+                            {saving ? 'Saving...' : (editingUser ? 'Update User' : 'Create User')}
                         </button>
                     </div>
                 }
             >
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            Username <span className="text-red-500">*</span>
+                        </label>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                 <User className="w-4 h-4" />
@@ -216,33 +295,36 @@ const UserIndex = () => {
                                 type="text" 
                                 required
                                 className="w-full bg-gray-50 border-none rounded-xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                                placeholder="John Doe"
+                                placeholder="Enter username (used for login)"
                                 value={formData.name}
                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                             />
                         </div>
+                        <p className="text-[10px] text-gray-400 ml-1">This username will be used for login</p>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            Email Address <span className="text-gray-300">(Optional)</span>
+                        </label>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                 <Mail className="w-4 h-4" />
                             </div>
                             <input 
                                 type="email" 
-                                required
                                 className="w-full bg-gray-50 border-none rounded-xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                                placeholder="john@example.com"
+                                placeholder="user@example.com (optional)"
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                             />
                         </div>
+                        <p className="text-[10px] text-gray-400 ml-1">Email is optional, for contact purposes only</p>
                     </div>
 
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
-                            {editingUser ? 'New Password (Leave blank to keep current)' : 'Password'}
+                            {editingUser ? 'New Password (Leave blank to keep current)' : <>Password <span className="text-red-500">*</span></>}
                         </label>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -260,7 +342,9 @@ const UserIndex = () => {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">System Role</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            System Role <span className="text-red-500">*</span>
+                        </label>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                 <Shield className="w-4 h-4" />
