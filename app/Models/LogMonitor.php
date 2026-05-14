@@ -16,6 +16,7 @@ class LogMonitor extends Model
     protected $fillable = [
         'id_aplikasi',
         'id_service',
+        'nama',
         'url',
         'status',
         'http_status_code',

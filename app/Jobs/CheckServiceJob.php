@@ -85,6 +85,7 @@ class CheckServiceJob implements ShouldQueue
                 $log = LogMonitor::create([
                     'id_aplikasi' => $model->id_aplikasi,
                     'id_service' => $this->isService ? $model->id_service : null,
+                    'nama' => $model->nama,
                     'url' => $url,
                     'status' => 'UP',
                     'http_status_code' => $httpStatus,
@@ -113,6 +114,7 @@ class CheckServiceJob implements ShouldQueue
                 $log = LogMonitor::create([
                     'id_aplikasi' => $model->id_aplikasi,
                     'id_service' => $this->isService ? $model->id_service : null,
+                    'nama' => $model->nama,
                     'url' => $url,
                     'status' => 'DOWN',
                     'http_status_code' => $httpStatus,
@@ -159,6 +161,7 @@ class CheckServiceJob implements ShouldQueue
             $log = LogMonitor::create([
                 'id_aplikasi' => $model->id_aplikasi,
                 'id_service' => $this->isService ? $model->id_service : null,
+                'nama' => $model->nama,
                 'url' => $url,
                 'status' => 'DOWN',
                 'http_status_code' => 0,
