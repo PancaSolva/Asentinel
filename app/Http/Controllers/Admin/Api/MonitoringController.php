@@ -50,10 +50,10 @@ class MonitoringController extends Controller
 
     public function runCheck()
     {
-        $monoliths = Aplikasi::where('tipe', 'monolith')->get();
+        $aplikasi = Aplikasi::all();
         $services = Service::all();
 
-        $this->dispatchJobs($monoliths);
+        $this->dispatchJobs($aplikasi);
         $this->dispatchJobs($services);
 
         return response()->json([
@@ -66,7 +66,7 @@ class MonitoringController extends Controller
     {
         foreach ($collection as $item) {
             if ($item->url_service) {
-                \App\Jobs\CheckServiceJob::dispatch($item);
+                \App\Jobs\CheckServiceJob::dispatchSync($item);
             }
         }
     }
