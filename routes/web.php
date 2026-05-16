@@ -31,11 +31,7 @@ Route::middleware([AdminMiddleware::class])->prefix('admin')->name('admin.')->gr
         Route::apiResource('log-monitor', LogMonitorController::class);
         Route::apiResource('log-anomali', LogAnomaliController::class);
 
-        // API Endpoints for User Management (used by SPA via session)
-        Route::get('/users', [ApiUserController::class, 'index'])->name('users.index');
-        Route::post('/users', [ApiUserController::class, 'store'])->name('users.store');
-        Route::put('/users/{id}', [ApiUserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{id}', [ApiUserController::class, 'destroy'])->name('users.destroy');
+        // User Management routes are now in api.php
     });
 });
 

@@ -9,11 +9,20 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900">
     @if(session('spa_token'))
+        @php
+            $sessionUser = session('admin_user');
+            $userData = [
+                'id' => $sessionUser->id ?? null,
+                'name' => $sessionUser->name ?? '',
+                'email' => $sessionUser->email ?? '',
+                'role' => $sessionUser->role ?? 'user',
+            ];
+        @endphp
         <script>
             localStorage.setItem('token', "{{ session('spa_token') }}");
-            localStorage.setItem('user', @json(session('admin_user')));
+            localStorage.setItem('user', JSON.stringify(@json($userData)));
         </script>
-        @php session()->forget('spa_token'); @endphp
+        @php session()->forget(['spa_token', 'admin_user']); @endphp
     @endif
     <div id="root"></div>
 </body>

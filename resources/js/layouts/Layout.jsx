@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, AppWindow, Server, Activity, LogOut, User, ChevronDown, AlertTriangle, Users } from 'lucide-react';
 import api from '../api';
+import { getStoredUser } from '../utils/auth';
 import Modal from '../components/Modal';
 
 const Layout = () => {
@@ -10,7 +11,7 @@ const Layout = () => {
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirmation] = useState(false);
     
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getStoredUser();
 
     const handleLogout = async () => {
         try {
@@ -77,7 +78,7 @@ const Layout = () => {
                         >
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-bold text-gray-800 leading-none">{user.name || 'Admin'}</p>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Administrator</p>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{user.role === 'admin' ? 'Administrator' : 'User'}</p>
                             </div>
                             <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-100">
                                 {user.name ? user.name.charAt(0) : 'A'}
@@ -91,7 +92,7 @@ const Layout = () => {
                                 <div className="fixed inset-0 z-10" onClick={() => setShowProfileDropdown(false)}></div>
                                 <div className="absolute right-0 top-14 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
                                     <div className="px-4 py-3 border-b border-gray-50">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Administrator Profile</p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{user.role === 'admin' ? 'Administrator' : 'User'} Profile</p>
                                         <p className="text-sm font-bold text-gray-800 truncate">{user.name || 'Admin User'}</p>
                                         <p className="text-[11px] text-gray-500 truncate">{user.email || 'admin@asentinel.com'}</p>
                                     </div>

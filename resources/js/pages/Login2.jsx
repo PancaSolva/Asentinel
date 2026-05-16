@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from '../api';
+import { getStoredUser } from '../utils/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
@@ -72,7 +73,7 @@ const ChartIcon = () => (
 
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -86,7 +87,8 @@ export default function Login() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      navigate('/', { replace: true });
+      const user = getStoredUser();
+      navigate(user.role === 'admin' ? '/' : '/user-dashboard', { replace: true });
     }
 
     const t1 = setTimeout(() => setMounted(true), 50);
@@ -101,14 +103,23 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await api.post('/login', { email, password });
+      const response = await api.post('/login', { username, password });
       
       if (response.data.success) {
+        const userData = response.data.user;
+        // Ensure role is always set
+        if (!userData.role) {
+          userData.role = 'user';
+        }
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify(userData));
         
-        const from = location.state?.from?.pathname || "/";
-        navigate(from, { replace: true });
+        // Always redirect based on role to prevent cross-role routing
+        if (userData.role === 'admin') {
+          navigate('/', { replace: true });
+        } else {
+          navigate('/user-dashboard', { replace: true });
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'The provided credentials are incorrect.');
@@ -484,8 +495,8 @@ export default function Login() {
                 className="login-input"
                 type="text"
                 placeholder="Username"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={username}
+                onChange={e => setUsername(e.target.value)}
                 autoComplete="username"
                 required
               />
